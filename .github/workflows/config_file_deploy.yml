@@ -1,0 +1,40 @@
+name: deploy config files
+
+on:
+  push:
+    branches:
+      - config-update
+    paths:
+      - 'nginx_conf/**'
+      - 'docker_compose_cloud/**'
+
+env:
+  NGINX_CONF_PATH: /files/nginx_conf/
+  SEC_FILE_NAME: edcwsxqaz
+
+jobs:
+
+  replace-files:
+    name: place new config files
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: install ssh keys
+      # check this thread to understand why its needed:
+      # <https://stackoverflow.com/a/70447517>
+      run: |
+        install -m 600 -D /dev/null ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+    - name: copy files
+      run: |
+        scp -i ~/.ssh/id_rsa -r nginx_conf/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}${{ env.NGINX_CONF_PATH }}
+        scp -i ~/.ssh/id_rsa -r docker_compose_cloud/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.WORK_DIR }}
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && touch ${{ env.SEC_FILE_NAME }} && echo ' ' > ${{ env.SEC_FILE_NAME }} && exit"
+    - name: restart redis and nginx  # changes to other services will take effect after the next deployment
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && docker compose up -d nginx-server redis-dev-server redis-prod-server && exit"
+    - name: cleanup
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && rm -f ${{ env.SEC_FILE_NAME }} && exit"
+        rm -rf ~/.ssh

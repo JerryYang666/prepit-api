@@ -1,0 +1,83 @@
+# This is the docker-compose file for in cloud development and production
+
+version: "1.0.3"
+
+services:
+  prepit-admin-dev-server:
+    container_name: prepit-admin-dev-server
+    secrets:
+      - prepit-secret
+    image: ghcr.io/os-computational-economics/prepit-admin:dev
+    volumes:
+      - ./admin_dev_volume:/app/volume_cache:rw
+    networks:
+      - devnet
+    depends_on:
+      - nginx-server
+  prepit-admin-prod-server:
+    container_name: prepit-admin-prod-server
+    secrets:
+      - prepit-secret
+    image: ghcr.io/os-computational-economics/prepit-admin:prod
+    volumes:
+      - ./admin_prod_volume:/app/volume_cache:rw
+    networks:
+      - prodnet
+    depends_on:
+      - nginx-server
+  prepit-user-dev-server:
+    container_name: prepit-user-dev-server
+    secrets:
+      - prepit-secret
+    image: ghcr.io/os-computational-economics/prepit-user:dev
+    volumes:
+      - ./user_dev_volume:/app/volume_cache:rw
+    networks:
+      - devnet
+    depends_on:
+      - nginx-server
+  prepit-user-prod-server:
+    container_name: prepit-user-prod-server
+    secrets:
+      - prepit-secret
+    image: ghcr.io/os-computational-economics/prepit-user:prod
+    volumes:
+      - ./user_prod_volume:/app/volume_cache:rw
+    networks:
+      - prodnet
+    depends_on:
+      - nginx-server
+  redis-dev-server:
+    container_name: redis-dev-server
+    image: redis/redis-stack-server:latest
+    volumes:
+      - ./redis_dev_volume:/data:rw
+    networks:
+      - devnet
+  redis-prod-server:
+    container_name: redis-prod-server
+    image: redis/redis-stack-server:latest
+    volumes:
+      - ./redis_prod_volume:/data:rw
+    networks:
+      - prodnet
+  nginx-server:
+    container_name: nginx-server
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./files/nginx_conf:/etc/nginx/conf.d:ro
+      - ./files/ssl:/etc/nginx/ssl:ro
+    networks:
+      - devnet
+      - prodnet
+
+networks:
+  devnet:
+  prodnet:
+
+secrets:
+  prepit-secret:
+    file: edcwsxqaz
