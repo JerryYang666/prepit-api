@@ -64,6 +64,8 @@ origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "https://prepit-user-web.vercel.app",
+    "https://app.prepit.ai",
+    "https://prepit.ai",
 ]
 
 regex_origins = "https://.*jerryyang666s-projects\.vercel\.app"
@@ -191,5 +193,5 @@ def read_root(request: Request):
         s3_test = file_storage.set_file("test_dir/test.txt", "success-"+formatted_time)
         s3_test_str = file_storage.get_file("test_dir/test.txt")
 
-        return {"Info": f"ENV-{redis_address}|REDIS-RW-{rds}|POSTGRES-{db_result}|VOLUME-{volume_result}|S3-{s3_test}, {s3_test_str}",
+        return {"Prepit-Info": f"ENV-{redis_address}|REDIS-RW-{rds}|POSTGRES-{db_result}|VOLUME-{volume_result}|S3-{s3_test}, {s3_test_str}",
                 "request-path": str(request.url.path)}
