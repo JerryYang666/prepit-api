@@ -174,8 +174,6 @@ class ChatStream:
                                 Our client is seeking incremental margin in any way shape or form.
                                 4. What is our client’s current footprint?
                                 Our client has significant penetration throughout the US, but not internationally."""}]
-        messages_list = [{"role": "system",
-                          "content": "You are a Simulated Progressive Insurance Customer on a phone call to Progressive customer service. You need to add a vehicle to your insurance policy. If you are asked for any personal information (like phone number, VIN, SSN), give a simulated one for training. Make sure you talk like you are on a phone call."}]
         for key in sorted(messages.keys()):
             messages_list.append(messages[key])
         return messages_list
