@@ -7,7 +7,7 @@ services:
     container_name: prepit-admin-dev-server
     secrets:
       - prepit-secret
-    image: ghcr.io/os-computational-economics/prepit-admin:dev
+    image: ghcr.io/jerryyang666/prepit-admin:dev
     volumes:
       - ./admin_dev_volume:/app/volume_cache:rw
     networks:
@@ -18,7 +18,7 @@ services:
     container_name: prepit-admin-prod-server
     secrets:
       - prepit-secret
-    image: ghcr.io/os-computational-economics/prepit-admin:prod
+    image: ghcr.io/jerryyang666/prepit-admin:prod
     volumes:
       - ./admin_prod_volume:/app/volume_cache:rw
     networks:
@@ -29,7 +29,7 @@ services:
     container_name: prepit-user-dev-server
     secrets:
       - prepit-secret
-    image: ghcr.io/os-computational-economics/prepit-user:dev
+    image: ghcr.io/jerryyang666/prepit-user:dev
     volumes:
       - ./user_dev_volume:/app/volume_cache:rw
     networks:
@@ -40,7 +40,7 @@ services:
     container_name: prepit-user-prod-server
     secrets:
       - prepit-secret
-    image: ghcr.io/os-computational-economics/prepit-user:prod
+    image: ghcr.io/jerryyang666/prepit-user:prod
     volumes:
       - ./user_prod_volume:/app/volume_cache:rw
     networks:
