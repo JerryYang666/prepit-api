@@ -81,7 +81,7 @@ class ChatStream:
         for text_chunk in stream:
             new_text = text_chunk
             response_text += new_text
-            if len(chunk_buffer.split()) > (18 + (chunk_id * 15)):  # dynamically adjust the chunk size
+            if len(chunk_buffer.split()) > (16 + (chunk_id * 13)):  # dynamically adjust the chunk size
                 if sentence_ender[0] in new_text and not chunk_buffer[-1].isnumeric():  # if the chunk contains a sentence ender . and the last character is not a number
                     chunk_buffer, chunk_id = self.__process_chunking(sentence_ender[0], new_text, chunk_buffer,
                                                                      chunk_id)
