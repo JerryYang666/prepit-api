@@ -90,7 +90,7 @@ async def stream_chat(chat_stream_model: ChatStreamModel):
     auth = DynamicAuth()
     if not auth.verify_auth_code(chat_stream_model.dynamic_auth_code):
         return ChatSingleCallResponse(status="fail", messages=[], thread_id="")
-    chat_instance = ChatStream(chat_stream_model.provider, openai_client, anthropic_client)
+    chat_instance = ChatStream(chat_stream_model.provider, chat_stream_model.current_step, openai_client, anthropic_client)
     return chat_instance.stream_chat(chat_stream_model)
 
 

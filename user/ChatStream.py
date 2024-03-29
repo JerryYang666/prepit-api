@@ -11,12 +11,14 @@ import json
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 from user.TtsStream import TtsStream
+from user.PromptManager import PromptManager
 import uuid
 
 
 class ChatStreamModel(BaseModel):
     dynamic_auth_code: str
     messages: dict[int, dict[str, str]]
+    current_step: int
     thread_id: str | None = None
     provider: str = "openai"
 
@@ -41,8 +43,9 @@ class ChatStream:
     Using this class need to pass in the full messages history, and the provider (openai or anthropic).
     """
 
-    def __init__(self, requested_provider, openai_client, anthropic_client):
+    def __init__(self, requested_provider, current_step, openai_client, anthropic_client):
         self.requested_provider = requested_provider
+        self.current_step = current_step
         self.openai_client = openai_client
         self.anthropic_client = anthropic_client
         # generate a TtsStream session id (uuid4)
@@ -78,8 +81,8 @@ class ChatStream:
         for text_chunk in stream:
             new_text = text_chunk
             response_text += new_text
-            if len(chunk_buffer.split()) > 17 + (chunk_id * 12):  # dynamically adjust the chunk size
-                if sentence_ender[0] in new_text:  # if the chunk contains a sentence ender .
+            if len(chunk_buffer.split()) > (18 + (chunk_id * 15)):  # dynamically adjust the chunk size
+                if sentence_ender[0] in new_text and not chunk_buffer[-1].isnumeric():  # if the chunk contains a sentence ender . and the last character is not a number
                     chunk_buffer, chunk_id = self.__process_chunking(sentence_ender[0], new_text, chunk_buffer,
                                                                      chunk_id)
                 elif sentence_ender[1] in new_text:  # if the chunk contains a sentence ender ?
@@ -174,6 +177,8 @@ class ChatStream:
                                 Our client is seeking incremental margin in any way shape or form.
                                 4. What is our client’s current footprint?
                                 Our client has significant penetration throughout the US, but not internationally."""}]
+        messages_list = [{"role": "system",
+                          "content": f"{PromptManager.BASE_ROLE} {PromptManager.LOGISTICS} Please follow this instruction: {PromptManager.STEPS[self.current_step]['instruction']} Here's some information for you: {PromptManager.STEPS[self.current_step]['information']}"}]
         for key in sorted(messages.keys()):
             messages_list.append(messages[key])
         return messages_list
