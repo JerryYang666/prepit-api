@@ -115,6 +115,7 @@ class ChatStream:
                 model="gpt-4-turbo-preview",
                 messages=messages,
                 stream=True,
+                max_tokens=80,
         ) as stream:
             for chunk in stream:
                 if chunk.choices[0].delta.content is not None:
@@ -177,8 +178,10 @@ class ChatStream:
                                 Our client is seeking incremental margin in any way shape or form.
                                 4. What is our client’s current footprint?
                                 Our client has significant penetration throughout the US, but not internationally."""}]
+        if self.current_step > len(PromptManager.STEPS) - 1:
+            self.current_step = len(PromptManager.STEPS) - 1
         messages_list = [{"role": "system",
-                          "content": f"{PromptManager.BASE_ROLE} {PromptManager.LOGISTICS} Please follow this instruction: {PromptManager.STEPS[self.current_step]['instruction']} Here's some information for you: {PromptManager.STEPS[self.current_step]['information']}"}]
+                          "content": f"{PromptManager.BASE_ROLE} Please follow this instruction: {PromptManager.STEPS[self.current_step]['instruction']} Here's some information for you, you should not give the info to candidate directly: {PromptManager.STEPS[self.current_step]['information']}"}]
         for key in sorted(messages.keys()):
             messages_list.append(messages[key])
         return messages_list
