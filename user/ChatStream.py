@@ -115,7 +115,7 @@ class ChatStream:
                 model="gpt-4-turbo-preview",
                 messages=messages,
                 stream=True,
-                max_tokens=90,
+                max_tokens=256,
         ) as stream:
             for chunk in stream:
                 if chunk.choices[0].delta.content is not None:

@@ -102,7 +102,7 @@ class PromptManager:
             3. evaluate the candidate's answer (calculations), and tell them if they are correct or incorrect.
             When the candidate indicate they finishes the market sizing part, move on to the next part by putting a [next] at the end of your message.
             The next part is Exhibit 1, so at the end of this part, you should prepare to present Exhibit 1 to the candidate.
-            Next part: Financial Analysis
+            Next part: identifying potential issues from exhibit
             """,
             "information": """
             Exhibit or Question Guidance:
@@ -120,7 +120,7 @@ class PromptManager:
             """},
         4: {"instruction": """
             Previous part: Market Sizing
-            You are now in the fifth part of the interview: Exhibit 1. In this part, you need to:
+            You are now in the fifth part of the interview: identifying potential issues from exhibit. In this part, you need to:
             1. Present Exhibit 1 to the candidate by giving this link https://bucket-57h03x.s3.us-east-2.amazonaws.com/prepit_data/Exhibit1.png enclosed in {}.
             2. Ask the candidate to analyze the exhibit and provide insights.
             3. Listen to and agree with the candidate's approach.
@@ -141,7 +141,7 @@ class PromptManager:
             • The candidate should push for additional information on Last mile delivery to move the case forward, move forward to brainstorming
             """},
         5: {"instruction": """
-            Previous part: Exhibit 1
+            Previous part: identifying potential issues from exhibit
             You are now in the sixth part of the interview: tackle last mile delivery. In this part, you need to:
             1. Ask: How could our client address its last mile delivery needs?
             2. Push the candidate to brainstorm how Distero can address the last mile delivery issue.
