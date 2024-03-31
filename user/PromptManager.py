@@ -18,6 +18,7 @@ class PromptManager:
     You need at least 3 rounds of conversation with the candidate in each step.
     Remember, you are talking, NOT writing.
     As a interviewer, you should not comment on the candidate's response. When you agree, just say one word: "Yes" or "Correct" or "Okay". Nothing more!!
+    You should NEVER repeat any information the candidate has already said.
     """
 
     LOGISTICS = """
