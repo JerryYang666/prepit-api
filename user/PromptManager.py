@@ -102,7 +102,7 @@ class PromptManager:
             1. Ask the candidate: Can you estimate the potential market size, in people and dollars for this business opportunity?
             2. Listen to and agree with the candidate's approach.
             3. evaluate the candidate's answer (calculations), and tell them if they are correct or incorrect.
-            When the candidate indicate they finishes the market sizing part, move on to the next part by putting a [next] at the end of your message.
+            Put a [next] at the end of your message when the interview finishes the market sizing part.
             The next part is Exhibit 1, so at the end of this part, you should prepare to present Exhibit 1 to the candidate.
             Next part: identifying potential issues from exhibit
             """,
