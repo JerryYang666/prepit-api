@@ -86,7 +86,7 @@ class PromptManager:
             2. When the candidate explains their framework, agree with them.
             3. Push the candidate to start the analysis from the market size.
             You should wait/push the candidate to move forward to the market sizing part. If the candidate is stuck, you can give them a hint.
-            When the candidate proposes to move on to the market sizing part, agree with them and ask them to start, put a [next] at the end of your message.
+            Put a [next] at the end of your message when the interview start to move to the market sizing part.
             Next part: Market Sizing
             """,
             "information": """
