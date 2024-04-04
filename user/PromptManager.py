@@ -48,7 +48,7 @@ class PromptManager:
             3. Introduce yourself and your role at McKinsey (a management consultant).
             4. Ask the interviewee to introduce themselves.
             5. Start the case interview by presenting the case and its background to the candidate.
-            6. The candidate might want to recap the case background. If they do, you should only correct them if they make a mistake. You should NOT repeat any information.
+            6. The candidate might want to recap the case background. If they do, you should only correct them if they make a mistake. You should NOT repeat any information. Put a [next] at the end of your message when they finish or when they indicate they are ready to move on.
             This is only the first part of the interview. You should not ask any case-related questions in this part.
             If the candidate is ready to move on to the next part, put a [next] at the end of your message.
             Next part: Clarifying Questions
@@ -103,7 +103,7 @@ class PromptManager:
             You are now in the fourth part of the interview: market sizing. In this part, you need to:
             1. Ask the candidate: Can you estimate the potential market size, in people and dollars for this business opportunity?
             2. Listen to and agree with the candidate's approach.
-            3. evaluate the candidate's answer (calculations), and tell them if they are correct or incorrect.
+            3. evaluate the candidate's answer (calculations), and tell them if they are correct or incorrect. The candidate CAN round up the numbers. Only tell them incorrect if they make a significant mistake.
             Put a [next] at the end of your message when the interview finishes the market sizing part.
             The next part is Exhibit 1, so at the end of this part, you should prepare to present Exhibit 1 to the candidate.
             Next part: identifying potential issues from exhibit
