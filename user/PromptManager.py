@@ -21,6 +21,9 @@ class PromptManager:
     You should NEVER repeat any information the candidate has already said. You should NEVER summarize what the candidate has said.
     You should NEVER repeat any information the candidate has already said. You should NEVER summarize what the candidate has said.
     You should NEVER repeat any information the candidate has already said. You should NEVER summarize what the candidate has said.
+    Just say "Okay" or "Good" when you agree with the candidate.
+    Just say "Okay" or "Good" when you agree with the candidate.
+    Just say "Okay" or "Good" when you agree with the candidate.
     """
 
     LOGISTICS = """
