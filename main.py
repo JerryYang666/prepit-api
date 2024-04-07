@@ -65,6 +65,7 @@ origins = [
     "http://127.0.0.1:5173",
     "https://prepit-user-web.vercel.app",
     "https://app.prepit.ai",
+    "https://test-app.prepit.ai",
     "https://prepit.ai",
 ]
 
@@ -90,7 +91,8 @@ async def stream_chat(chat_stream_model: ChatStreamModel):
     auth = DynamicAuth()
     if not auth.verify_auth_code(chat_stream_model.dynamic_auth_code):
         return ChatSingleCallResponse(status="fail", messages=[], thread_id="")
-    chat_instance = ChatStream(chat_stream_model.provider, chat_stream_model.current_step, openai_client, anthropic_client)
+    chat_instance = ChatStream(chat_stream_model.provider, chat_stream_model.current_step, openai_client,
+                               anthropic_client)
     return chat_instance.stream_chat(chat_stream_model)
 
 
@@ -170,7 +172,7 @@ def read_root(request: Request):
 
         #  test redis connection
         r = redis.Redis(host=redis_address, port=6379, protocol=3, decode_responses=True)
-        r.set('foo', 'success-'+formatted_time)
+        r.set('foo', 'success-' + formatted_time)
         rds = r.get('foo')
 
         # test database connection
@@ -182,7 +184,7 @@ def read_root(request: Request):
         # test docker volume access
         try:
             with open("./volume_cache/test.txt", "w") as f:
-                f.write("success-"+formatted_time)
+                f.write("success-" + formatted_time)
             with open("./volume_cache/test.txt", "r") as f:
                 volume_result = f.read()
         except FileNotFoundError:
@@ -190,8 +192,9 @@ def read_root(request: Request):
 
         # test AWS S3 access
         file_storage = FileStorageHandler()
-        s3_test = file_storage.set_file("test_dir/test.txt", "success-"+formatted_time)
+        s3_test = file_storage.set_file("test_dir/test.txt", "success-" + formatted_time)
         s3_test_str = file_storage.get_file("test_dir/test.txt")
 
-        return {"Prepit-ai-Info": f"ENV-{redis_address}|REDIS-RW-{rds}|POSTGRES-{db_result}|VOLUME-{volume_result}|S3-{s3_test}, {s3_test_str}",
-                "request-path": str(request.url.path)}
+        return {
+            "Prepit-ai-Info": f"ENV-{redis_address}|REDIS-RW-{rds}|POSTGRES-{db_result}|VOLUME-{volume_result}|S3-{s3_test}, {s3_test_str}",
+            "request-path": str(request.url.path)}
