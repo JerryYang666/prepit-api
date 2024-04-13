@@ -13,6 +13,7 @@ from dotenv import load_dotenv, dotenv_values
 import os
 import time
 from datetime import datetime
+import uuid
 
 import redis
 from openai import OpenAI
@@ -22,9 +23,19 @@ from sqlalchemy.sql import text
 
 from common.DynamicAuth import DynamicAuth
 from common.FileStorageHandler import FileStorageHandler
+from common.MessageStorageHandler import MessageStorageHandler
 from user.ChatStream import ChatStream, ChatStreamModel, ChatSingleCallResponse
 from user.TtsStream import TtsStream
 from user.SttApiKey import SttApiKey, SttApiKeyResponse
+from admin.AgentManager import router as AgentRouter
+from user.GetAgent import router as GetAgentRouter
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:     %(name)s - %(message)s'
+)
 
 DEV_PREFIX = "/dev"
 PROD_PREFIX = "/prod"
@@ -56,8 +67,19 @@ app = FastAPI(docs_url=f"{URL_PATHS['current_dev_admin']}/docs", redoc_url=f"{UR
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 anthropic_client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
+# Register the AgentRouter for admin endpoints
+app.include_router(AgentRouter, prefix=f"{URL_PATHS['current_dev_admin']}/agents")
+app.include_router(AgentRouter, prefix=f"{URL_PATHS['current_prod_admin']}/agents")
+
+# Register GetAgentRouter for user endpoints
+# note there is similar functionality in the AgentRouter but I made a different version for users
+# so we can seperate the two and maybe add security where users can get the full info given to admin users
+app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_dev_user']}/agent")
+app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_prod_user']}/agent")
+
 origins = [
     "http://127.0.0.1:8001",
+    "http://localhost:3000",
     "http://localhost:8000",
     "http://localhost:5173",
     "http://localhost:5172",
@@ -156,6 +178,7 @@ def read_root(request: Request):
     3. database connection
     4. docker volume access at ./volume_cache
     5. AWS S3 access
+    6. AWS DynamoDB access
     ENDPOINTS: /v1/dev/admin, /v1/prod/admin, /v1/dev/user, /v1/prod/user, /
     :param request:
     :return:
@@ -192,9 +215,34 @@ def read_root(request: Request):
 
         # test AWS S3 access
         file_storage = FileStorageHandler()
-        s3_test = file_storage.set_file("test_dir/test.txt", "success-" + formatted_time)
+        s3_test = file_storage.put_file("test_dir/test.txt", "success-" + formatted_time)
         s3_test_str = file_storage.get_file("test_dir/test.txt")
 
+        # test AWS DynamoDB access
+        # current timestamp
+        test_thread_id = str(uuid.uuid4())
+        test_user_id = 'rxy216'
+        test_role = 'test'
+        test_content = 'test content'
+        message = MessageStorageHandler()
+        created_at = message.put_message(test_thread_id, test_user_id, test_role, test_content)
+        test_msg_get_content = message.get_message(test_thread_id, created_at).content
+        test_thread_get_content = message.get_thread(test_thread_id)
+
         return {
-            "Prepit-ai-Info": f"ENV-{redis_address}|REDIS-RW-{rds}|POSTGRES-{db_result}|VOLUME-{volume_result}|S3-{s3_test}, {s3_test_str}",
-            "request-path": str(request.url.path)}
+            "sys-info": {
+                "REDIS-ENV": redis_address,
+                "REDIS-RW": rds,
+                "POSTGRES": db_result,
+                "VOLUME": volume_result,
+                "S3": {
+                    "Test": s3_test,
+                    "Message": s3_test_str
+                },
+                "DYNAMODB": {
+                    "Message Content": test_msg_get_content,
+                    "Thread Content": test_thread_get_content
+                }
+            },
+            "request-path": str(request.url.path)
+        }

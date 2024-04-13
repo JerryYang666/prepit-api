@@ -53,6 +53,7 @@ jobs:
             repo-token: ${{ secrets.GITHUB_TOKEN }}
             wait-interval: 5
         - name: install ssh keys
+          if: ${{ !cancelled() }}
           # check this thread to understand why its needed:
           # <https://stackoverflow.com/a/70447517>
           run: |
@@ -61,10 +62,14 @@ jobs:
             ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
             ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && touch ${{ env.SEC_FILE_NAME }} && echo '${{ secrets.PROD_SECRETS }}' > ${{ env.SEC_FILE_NAME }} && exit"
         - name: connect and pull
+          if: ${{ !cancelled() }}
           run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo ${{ secrets.PAT }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin && cd ${{ secrets.WORK_DIR }} && docker stop ${{ env.CONTAINER_NAME }} || true | xargs docker rm || true && docker compose pull ${{ env.CONTAINER_NAME }} && docker compose up -d ${{ env.CONTAINER_NAME }} && exit"
         - name: clean env
+          if: ${{ !cancelled() }}
           run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && rm -f ${{ env.SEC_FILE_NAME }} && exit"
         - name: get time
+          if: ${{ !cancelled() }}
           run: echo "TIME=$(date +'%Y%m%d_%H%M%S')" >> $GITHUB_ENV
         - name: cleanup
+          if: ${{ !cancelled() }}
           run: rm -rf ~/.ssh

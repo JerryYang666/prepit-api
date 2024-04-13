@@ -58,7 +58,7 @@ class FileStorageHandler:
         except FileNotFoundError:
             return None
 
-    def set_file(self, filename: str, content: Any) -> bool:
+    def put_file(self, filename: str, content: Any) -> bool:
         """
         Set the content of a file in the local cache and upload it to the S3 bucket.
         :param filename: The name of the file. Can be a relative path to docker volume.
