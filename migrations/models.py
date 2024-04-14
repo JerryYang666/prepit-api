@@ -34,15 +34,18 @@ class Agent(Base):
     __tablename__ = "ai_agents"
 
     agent_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
     agent_name = Column(String(255), nullable=False)
-    course_id = Column(String(31))
+    agent_description = Column(String, default='', nullable=False)
+    agent_cover = Column(String, default='', nullable=False)
     creator = Column(String(16))
+    created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), nullable=False)
-    voice = Column(Boolean, default=False, nullable=False)
-    status = Column(Integer, default=1, nullable=False)  # 1-active, 0-inactive, 2-deleted
+    cat_id = Column(String(31))
+    status = Column(Integer, default=1, nullable=False)
+    voice = Column(Boolean, default=True, nullable=False)
     allow_model_choice = Column(Boolean, default=True, nullable=False)
     model = Column(String(16))
+    agent_total_steps = Column(Integer, default=0, nullable=False)
 
     def __repr__(self):
-        return f"Agent id: {self.agent_id}, name: {self.agent_name}, course_id: {self.course_id}, creator: {self.creator}, status: {self.status}, model: {self.model}"
+        return f"Agent id: {self.agent_id}, name: {self.agent_name}, description: {self.agent_description}, cover: {self.agent_cover}, creator: {self.creator}, status: {self.status}, model: {self.model}"

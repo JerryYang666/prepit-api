@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from uuid import UUID, uuid4
 from datetime import datetime
+import json
 
 from migrations.session import get_db
 from migrations.models import Agent
@@ -21,13 +22,15 @@ agent_prompt_handler = AgentPromptHandler()
 
 class AgentCreate(BaseModel):
     agent_name: str
-    course_id: Optional[str] = None
-    creator: Optional[str] = None
-    voice: bool = Field(default=False)
+    agent_description: Optional[str] = ''
+    agent_cover: Optional[str] = '/placeholder.svg'
+    creator: Optional[str] = 'admin'
+    cat_id: Optional[str] = '1'
     status: int = Field(default=1, description='1-active, 0-inactive, 2-deleted')
     allow_model_choice: bool = Field(default=True)
     model: Optional[str] = None
-    system_prompt: str
+    voice: bool = Field(default=True)
+    system_prompt: dict
 
 
 class AgentDelete(BaseModel):
@@ -37,27 +40,29 @@ class AgentDelete(BaseModel):
 class AgentUpdate(BaseModel):
     agent_id: UUID
     agent_name: Optional[str] = None
-    course_id: Optional[str] = None
+    agent_description: Optional[str] = None
+    agent_cover: Optional[str] = None
     creator: Optional[str] = None
-    voice: Optional[bool] = None
+    cat_id: Optional[str] = None
     status: Optional[int] = None
+    voice: Optional[bool] = None
     allow_model_choice: Optional[bool] = None
     model: Optional[str] = None
-    system_prompt: str
+    system_prompt: Optional[dict] = None
 
 
 class AgentResponse(BaseModel):
     agent_id: UUID
     agent_name: str
-    course_id: Optional[str] = None
-    creator: Optional[str] = None
-    voice: bool
+    agent_description: str
+    agent_cover: str
+    creator: str
+    updated_at: datetime
+    cat_id: str
     status: int
     allow_model_choice: bool
     model: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-    system_prompt: str
+    system_prompt: dict
 
 
 @router.post("/add_agent")
@@ -70,18 +75,31 @@ def create_agent(
     """
     new_agent = Agent(
         agent_id=uuid4(),
-        created_at=datetime.now(),
         agent_name=agent_data.agent_name,
-        course_id=agent_data.course_id,
+        agent_description=agent_data.agent_description,
+        agent_cover=agent_data.agent_cover,
         creator=agent_data.creator,
-        updated_at=datetime.now(),
-        voice=agent_data.voice,
+        cat_id=agent_data.cat_id,
         status=agent_data.status,
+        voice=agent_data.voice,
         allow_model_choice=agent_data.allow_model_choice,
-        model=agent_data.model
+        model=agent_data.model,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        agent_total_steps=len(agent_data.system_prompt)
     )
     db.add(new_agent)
-    agent_prompt_handler.put_agent_prompt(str(new_agent.agent_id), agent_data.system_prompt, '0')
+
+    # check if all item keys in the system_prompt are numbers
+    if not all(k.isnumeric() for k in agent_data.system_prompt.keys()):
+        return response(False, message="Prompt keys must be numeric")
+
+    # add each item as a prompt
+    for key, value in agent_data.system_prompt.items():
+        # if value is dict, convert it to json
+        if isinstance(value, dict):
+            value = json.dumps(value)
+        agent_prompt_handler.put_agent_prompt(str(new_agent.agent_id), value, key)
 
     try:
         db.commit()
@@ -135,8 +153,10 @@ def edit_agent(
     # Update the agent fields if provided
     if update_data.agent_name is not None:
         agent_to_update.agent_name = update_data.agent_name
-    if update_data.course_id is not None:
-        agent_to_update.course_id = update_data.course_id
+    if update_data.agent_description is not None:
+        agent_to_update.agent_description = update_data.agent_description
+    if update_data.agent_cover is not None:
+        agent_to_update.agent_cover = update_data.agent_cover
     if update_data.creator is not None:
         agent_to_update.creator = update_data.creator
     if update_data.voice is not None:
@@ -148,9 +168,19 @@ def edit_agent(
     if update_data.model is not None:
         agent_to_update.model = update_data.model
     agent_to_update.updated_at = datetime.now()
+    agent_to_update.agent_total_steps = len(update_data.system_prompt)
 
     if update_data.system_prompt is not None:
-        agent_prompt_handler.put_agent_prompt(str(agent_to_update.agent_id), update_data.system_prompt, '0')
+        # check if all item keys in the system_prompt are numbers
+        if not all(k.isnumeric() for k in update_data.system_prompt.keys()):
+            return response(False, message="Prompt keys must be numeric")
+
+        # add each item as a prompt
+        for key, value in update_data.system_prompt.items():
+            # if value is dict, convert it to json
+            if isinstance(value, dict):
+                value = json.dumps(value)
+            agent_prompt_handler.put_agent_prompt(str(agent_to_update.agent_id), value, key)
 
     try:
         db.commit()
@@ -165,7 +195,7 @@ def edit_agent(
 
 @router.get("/agents")
 def list_agents(
-        creator: str,
+        search: Optional[str] = None,
         db: Session = Depends(get_db),
         page: int = 1,
         page_size: int = 10
@@ -173,14 +203,19 @@ def list_agents(
     """
     List agents with pagination.
     """
-    query = db.query(Agent).filter(Agent.creator == creator, Agent.status != 2)  # exclude deleted agents
+    # search by name or description
+    if search is None or search == "":
+        query = db.query(Agent).filter(Agent.status != 2)
+    else:
+        query = db.query(Agent).filter(Agent.status != 2).filter(
+            (Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%")))
     total = query.count()
     query = query.order_by(Agent.updated_at.desc())
     skip = (page - 1) * page_size
     agents = query.offset(skip).limit(page_size).all()
     # get the prompt for each agent
     for agent in agents:
-        agent.system_prompt = agent_prompt_handler.get_agent_prompt(str(agent.agent_id), '0') or ""
+        agent.system_prompt = ""
     return response(True, data={"agents": agents, "total": total})
 
 
@@ -195,4 +230,9 @@ def get_agent_by_id(
     agent = db.query(Agent).filter(Agent.agent_id == agent_id, Agent.status != 2).first()  # exclude deleted agents
     if agent is None:
         response(False, status_code=404, message="Agent not found")
+    # get the prompt for the agent
+    system_prompt = {}
+    for step in range(0, agent.agent_total_steps):
+        system_prompt[step] = agent_prompt_handler.get_agent_prompt(str(agent_id), str(step))
+    agent.system_prompt = system_prompt
     return response(True, data=agent)
