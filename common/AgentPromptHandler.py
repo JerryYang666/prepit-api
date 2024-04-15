@@ -62,7 +62,7 @@ class AgentPromptHandler:
         logging.info(f"Cache miss, getting the agent prompt from the database. {agent_id}")
         try:
             response = self.table.query(
-                KeyConditionExpression=Key('agent_id').eq(agent_id) & Key('step').eq(step)
+                KeyConditionExpression=Key('agent_id').eq(agent_id) & Key('step').eq(str(step))
             )
             if response['Items']:
                 prompt = response['Items'][0]['prompt']
