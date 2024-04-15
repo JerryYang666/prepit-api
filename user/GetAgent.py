@@ -43,6 +43,7 @@ def get_agent_by_id(
     else:
         return response(True, data={
             "agent_name": agent.agent_name,
+            "agent_total_steps": agent.agent_total_steps,
         })
 
 
