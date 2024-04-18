@@ -6,7 +6,7 @@
 @email: rxy216@case.edu
 @time: 3/27/24 17:52
 """
-from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from dotenv import load_dotenv, dotenv_values
@@ -23,12 +23,14 @@ from sqlalchemy.sql import text
 
 from common.DynamicAuth import DynamicAuth
 from common.FileStorageHandler import FileStorageHandler
+from common.FileUploadHandler import FileUploadHandler
 from common.MessageStorageHandler import MessageStorageHandler
 from user.ChatStream import ChatStream, ChatStreamModel, ChatSingleCallResponse
 from user.TtsStream import TtsStream
 from user.SttApiKey import SttApiKey, SttApiKeyResponse
 from admin.AgentManager import router as AgentRouter
 from user.GetAgent import router as GetAgentRouter
+from utils.response import response
 
 import logging
 
@@ -113,8 +115,8 @@ async def stream_chat(chat_stream_model: ChatStreamModel):
     auth = DynamicAuth()
     if not auth.verify_auth_code(chat_stream_model.dynamic_auth_code):
         return ChatSingleCallResponse(status="fail", messages=[], thread_id="")
-    chat_instance = ChatStream(chat_stream_model.provider, chat_stream_model.current_step, chat_stream_model.agent_id, openai_client,
-                               anthropic_client)
+    chat_instance = ChatStream(chat_stream_model.provider, chat_stream_model.current_step, chat_stream_model.agent_id,
+                               openai_client, anthropic_client)
     return chat_instance.stream_chat(chat_stream_model)
 
 
@@ -163,6 +165,20 @@ def get_temp_stt_auth_code(dynamic_auth_code: str):
     stt_key_instance = SttApiKey()
     api_key, _ = stt_key_instance.generate_key()
     return SttApiKeyResponse(status="success", error_message=None, key=api_key)
+
+
+@app.post(f"{URL_PATHS['current_dev_admin']}/upload_file")
+@app.post(f"{URL_PATHS['current_prod_admin']}/upload_file")
+def upload_file(file: UploadFile):
+    """
+    ENDPOINT: /admin/upload_file
+    Uploads a file to the server.
+    :param file: The file to upload.
+    :return: The response.
+    """
+    file_upload_handler = FileUploadHandler()
+    file_url = file_upload_handler.upload_file(file.file, file.content_type, public=True)
+    return response(True, data={"file_url": file_url})
 
 
 @app.get(f"{URL_PATHS['current_dev_admin']}/")

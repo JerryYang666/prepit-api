@@ -31,6 +31,7 @@ class AgentCreate(BaseModel):
     model: Optional[str] = None
     voice: bool = Field(default=True)
     system_prompt: dict
+    files: dict = Field(default={})
 
 
 class AgentDelete(BaseModel):
@@ -49,6 +50,7 @@ class AgentUpdate(BaseModel):
     allow_model_choice: Optional[bool] = None
     model: Optional[str] = None
     system_prompt: Optional[dict] = None
+    files: Optional[dict] = None
 
 
 class AgentResponse(BaseModel):
@@ -63,6 +65,7 @@ class AgentResponse(BaseModel):
     allow_model_choice: bool
     model: Optional[str] = None
     system_prompt: dict
+    files: dict
 
 
 @router.post("/add_agent")
@@ -86,7 +89,8 @@ def create_agent(
         model=agent_data.model,
         created_at=datetime.now(),
         updated_at=datetime.now(),
-        agent_total_steps=len(agent_data.system_prompt)
+        agent_total_steps=len(agent_data.system_prompt),
+        files=agent_data.files
     )
     db.add(new_agent)
 
@@ -167,6 +171,8 @@ def edit_agent(
         agent_to_update.allow_model_choice = update_data.allow_model_choice
     if update_data.model is not None:
         agent_to_update.model = update_data.model
+    if update_data.files is not None:
+        agent_to_update.files = update_data.files
     agent_to_update.updated_at = datetime.now()
     agent_to_update.agent_total_steps = len(update_data.system_prompt)
 

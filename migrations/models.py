@@ -7,7 +7,7 @@
 @time: 3/16/24 23:48
 """
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, String, Integer, func, MetaData, Boolean, UUID
+from sqlalchemy import Column, DateTime, String, Integer, func, MetaData, Boolean, UUID, JSON
 
 Base = declarative_base(metadata=MetaData(schema="public"))
 metadata = Base.metadata
@@ -46,6 +46,7 @@ class Agent(Base):
     allow_model_choice = Column(Boolean, default=True, nullable=False)
     model = Column(String(16))
     agent_total_steps = Column(Integer, default=0, nullable=False)
+    files = Column(JSON)
 
     def __repr__(self):
         return f"Agent id: {self.agent_id}, name: {self.agent_name}, description: {self.agent_description}, cover: {self.agent_cover}, creator: {self.creator}, status: {self.status}, model: {self.model}"
