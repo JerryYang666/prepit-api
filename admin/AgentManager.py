@@ -209,19 +209,20 @@ def list_agents(
     """
     List agents with pagination.
     """
+    fields = (Agent.agent_name, Agent.agent_cover, Agent.agent_description, Agent.agent_id, Agent.updated_at)
     # search by name or description
     if search is None or search == "":
-        query = db.query(Agent).filter(Agent.status != 2)
+        query = db.query(Agent).with_entities(*fields).filter(Agent.status != 2)
     else:
-        query = db.query(Agent).filter(Agent.status != 2).filter(
-            (Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%")))
+        query = (db.query(Agent).with_entities(*fields).filter(Agent.status != 2)
+                 .filter((Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%"))))
     total = query.count()
     query = query.order_by(Agent.updated_at.desc())
     skip = (page - 1) * page_size
     agents = query.offset(skip).limit(page_size).all()
-    # get the prompt for each agent
-    for agent in agents:
-        agent.system_prompt = ""
+    # Convert each tuple into a dictionary
+    agents = [dict(agent_name=agent[0], agent_cover=agent[1], agent_description=agent[2], agent_id=agent[3],
+                   updated_at=agent[4]) for agent in agents]
     return response(True, data={"agents": agents, "total": total})
 
 
@@ -241,4 +242,6 @@ def get_agent_by_id(
     for step in range(0, agent.agent_total_steps):
         system_prompt[step] = agent_prompt_handler.get_agent_prompt(str(agent_id), str(step))
     agent.system_prompt = system_prompt
+    if not agent.files:
+        agent.files = {}
     return response(True, data=agent)
