@@ -169,20 +169,6 @@ class ChatStream:
         :param messages: {0: {"role": "user", "content": "Hello, how are you?"}, 1: {"role": "assistant", "content": "I am fine, thank you."}}
         :return:
         """
-        # messages_list = [{"role": "system",
-        #                  "content": "You are a teaching assistant for the Computational Economics Course. Make sure you sound like someone talking, not writing. Use contractions, and try to be conversational. You should not say very long paragraphs. As someone who is talking, you should be giving short, quick messages. No long paragraphs, No long paragraphs, please."}]
-        messages_list = [{"role": "system",
-                          "content": """You are an interviewer at McKinsey. You are conducting a case interview with a candidate. This is a Quick ask, quick answer scenario. You should be asking questions and giving short, quick responses. You should not say very long paragraphs. As an interviewer, you should be giving short, quick messages. No long paragraphs, please.
-                          Prompt:Our client, Distero, is a large grocery distributor based out of the US. As a result of the COVID-19 pandemic, Distero identified that its customers, US grocery stores, have had significantly increased grocery deliveries to end consumers. Distero is bringing in our team to investigate whether they can, and should, offer direct to consumer (DTC) e-commerce grocery delivery. How would you advise our client?
-                                Clarifying Information:(Provide this only if corresponding questions are asked, If candidate asks a question that is not listed here, you should not provide an answer, and should say that question is not relevant to the case.)
-                                1. What is the grocery industry value chain?
-                                The grocery value chain is largely a “three tier” system whereby food producers sell to distributors who subsequently sell to retail locations primarily restaurants and grocery stores.
-                                2. Does our client have any experience with e-commerce?
-                                Our client has an existing e-commerce platform that it uses for its current customers (grocers) to purchase goods for delivery.
-                                3. What is the client’s objective?
-                                Our client is seeking incremental margin in any way shape or form.
-                                4. What is our client’s current footprint?
-                                Our client has significant penetration throughout the US, but not internationally."""}]
         current_step = self.agent_prompt_handler.get_agent_prompt(self.agent_id, self.current_step)
         current_step_info = {}
         if current_step:
