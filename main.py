@@ -156,7 +156,7 @@ async def get_tts_file(tts_session_id: str, chunk_id: str, background_tasks: Bac
 def get_temp_stt_auth_code(dynamic_auth_code: str):
     """
     ENDPOINT: /user/get_temp_stt_auth_code
-    Generates a temporary STT auth code for the user.
+    Generates a temporary STT auth code for the user
     :return:
     """
     auth = DynamicAuth()
