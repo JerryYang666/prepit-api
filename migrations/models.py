@@ -7,27 +7,10 @@
 @time: 3/16/24 23:48
 """
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, DateTime, String, Integer, func, MetaData, Boolean, UUID, JSON
+from sqlalchemy import Column, DateTime, String, Integer, func, MetaData, Boolean, UUID, JSON, UniqueConstraint, ForeignKey
 
 Base = declarative_base(metadata=MetaData(schema="public"))
 metadata = Base.metadata
-
-
-class Student(Base):
-    __tablename__ = "ai_users"
-
-    user_id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    first_name = Column(String(60), nullable=False)
-    last_name = Column(String(60), nullable=False)
-    email = Column(String(150), unique=True, primary_key=True, nullable=False)
-    student_id = Column(String(20), unique=True, nullable=False)
-    role = Column(String(20), nullable=False)
-    school_id = Column(Integer, nullable=False)
-    last_login = Column(DateTime)
-    create_at = Column(DateTime, default=func.now())
-
-    def __repr__(self):
-        return f"id: {self.user_id}, name: {self.first_name} {self.last_name}, email: {self.email}, student_id: {self.student_id}, role: {self.role}, school_id: {self.school_id}, last_login: {self.last_login}, create_at: {self.create_at}"
 
 
 class Agent(Base):
@@ -50,3 +33,47 @@ class Agent(Base):
 
     def __repr__(self):
         return f"Agent id: {self.agent_id}, name: {self.agent_name}, description: {self.agent_description}, cover: {self.agent_cover}, creator: {self.creator}, status: {self.status}, model: {self.model}"
+
+
+class User(Base):
+    __tablename__ = "ai_users"
+
+    user_id = Column(Integer, primary_key=True, unique=True)
+    first_name = Column(String(60), nullable=False)
+    last_name = Column(String(60), nullable=False)
+    email = Column(String(150), nullable=False, unique=True)
+    system_admin = Column(Boolean, default=False, nullable=False)
+    workspace_role = Column(JSON, nullable=False)
+    school_id = Column(Integer, nullable=False)
+    student_id = Column(String(20))
+    last_auth_metadata = Column(JSON)
+    last_login = Column(DateTime)
+    create_at = Column(DateTime)
+    profile_img_url = Column(String(2048), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'email', name='ai_users_pk'),
+    )
+
+    def __repr__(self):
+        return f"AIUser id: {self.user_id}, email: {self.email}"
+
+
+class RefreshToken(Base):
+    __tablename__ = "ai_refresh_tokens"
+
+    token_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('ai_users.user_id'), nullable=False)
+    token = Column(UUID(as_uuid=True), nullable=False, unique=True)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    expire_at = Column(DateTime, nullable=False)
+    auth_metadata = Column(JSON)
+    issued_access_token_count = Column(Integer, default=0, nullable=False)
+    last_access_token_issued_at = Column(DateTime)
+
+    __table_args__ = (
+        UniqueConstraint('token', name='ai_refresh_tokens_token_key'),
+    )
+
+    def __repr__(self):
+        return f"RefreshToken id: {self.token_id}, user_id: {self.user_id}, token: {self.token}"
