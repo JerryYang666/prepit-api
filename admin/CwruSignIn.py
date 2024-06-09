@@ -9,7 +9,7 @@
 import requests
 import xml.etree.ElementTree as ET
 from fastapi.responses import RedirectResponse
-from UserAuth import UserAuth
+from admin.UserAuth import UserAuth
 
 
 class AuthSSO:

@@ -12,7 +12,7 @@ from google_auth_oauthlib.flow import Flow
 from dotenv import load_dotenv
 import os
 import redis
-from UserAuth import UserAuth
+from admin.UserAuth import UserAuth
 from fastapi.responses import RedirectResponse
 import logging
 
