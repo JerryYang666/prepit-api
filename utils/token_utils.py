@@ -39,17 +39,9 @@ def fix_key(broken_key):
 
 
 private_key = os.getenv("JWT_PRIVATE_KEY")
-# if the key starts with a lower case n after the header, it is broken
-header_start = private_key.find("-----BEGIN")
-header_end = private_key.find("-----", header_start + len("-----BEGIN")) + len("-----")
-if private_key[header_end] == 'n':
-    private_key = fix_key(private_key)
+private_key = private_key.replace('!', '\n')
 public_key = os.getenv("JWT_PUBLIC_KEY")
-# if the key starts with a lower case n after the header, it is broken
-header_start = public_key.find("-----BEGIN")
-header_end = public_key.find("-----", header_start + len("-----BEGIN")) + len("-----")
-if public_key[header_end] == 'n':
-    public_key = fix_key(public_key)
+public_key = public_key.replace('!', '\n')
 algorithm = "RS256"
 
 
