@@ -29,6 +29,8 @@ from user.ChatStream import ChatStream, ChatStreamModel, ChatSingleCallResponse
 from user.TtsStream import TtsStream
 from user.SttApiKey import SttApiKey, SttApiKeyResponse
 from admin.AgentManager import router as AgentRouter
+from admin.GoogleSignIn import get_signin_url, signin_callback
+from admin.CwruSignIn import AuthSSO
 from user.GetAgent import router as GetAgentRouter
 from utils.response import response
 
@@ -167,9 +169,52 @@ def get_temp_stt_auth_code(dynamic_auth_code: str):
     return SttApiKeyResponse(status="success", error_message=None, key=api_key)
 
 
+@app.get(f"{URL_PATHS['current_dev_admin']}/get_google_signin_url")
+@app.get(f"{URL_PATHS['current_prod_admin']}/get_google_signin_url")
+async def get_google_signin_url(came_from: str):
+    """
+    ENDPOINT: /admin/get_google_signin_url
+    Gets the Google Signin URL.
+    :param came_from: the current URL that the user is on.
+    :return:
+    """
+    try:
+        url = get_signin_url(came_from)
+        return response(True, data={"url": url})
+    except Exception as e:
+        return response(False, message="Failed to get Google Signin URL")
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/google_signin_callback")
+@app.get(f"{URL_PATHS['current_prod_admin']}/google_signin_callback")
+async def google_signin_callback(code: str, state: str):
+    """
+    ENDPOINT: /admin/google-signin-callback
+    Handles the Google Signin callback.
+    :param code: The code.
+    :param state: The state.
+    :return:
+    """
+    return signin_callback(code, state)
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/cwru_sso_callback")
+@app.get(f"{URL_PATHS['current_prod_admin']}/cwru_sso_callback")
+async def cwru_sso_callback(ticket: str, came_from: str):
+    """
+    ENDPOINT: /v1/prod/user/sso
+    Handles the CWRU SSO callback.
+    :param ticket: The ticket.
+    :param came_from: The came_from.
+    :return:
+    """
+    auth = AuthSSO(ticket, came_from)
+    return auth.get_user_info()
+
+
 @app.post(f"{URL_PATHS['current_dev_admin']}/upload_file")
 @app.post(f"{URL_PATHS['current_prod_admin']}/upload_file")
-def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile):
     """
     ENDPOINT: /admin/upload_file
     Uploads a file to the server.
