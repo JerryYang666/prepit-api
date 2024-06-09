@@ -187,15 +187,16 @@ async def get_google_signin_url(came_from: str):
 
 @app.get(f"{URL_PATHS['current_dev_admin']}/google_signin_callback")
 @app.get(f"{URL_PATHS['current_prod_admin']}/google_signin_callback")
-async def google_signin_callback(code: str, state: str):
+async def google_signin_callback(code: str, state: str, error: str = None):
     """
     ENDPOINT: /admin/google-signin-callback
     Handles the Google Signin callback
     :param code: The code.
     :param state: The state.
+    :param error: The error. error=access_denied when user denies access
     :return:
     """
-    return signin_callback(code, state)
+    return signin_callback(code, state, error)
 
 
 @app.get(f"{URL_PATHS['current_dev_admin']}/cwru_sso_callback")

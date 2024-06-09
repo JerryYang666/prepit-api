@@ -67,7 +67,7 @@ def get_signin_url(current_url):
     return authorization_url
 
 
-def signin_callback(code, state):
+def signin_callback(code, state, error):
     """
     google signin callback
     use code to get token
@@ -79,6 +79,8 @@ def signin_callback(code, state):
     if redirect_url is None:
         return False
     redis_client.delete(state)
+    if error is not None:
+        return RedirectResponse(url=f"{redirect_url}?refresh=error&access=error")
     try:
         flow = get_flow()
         token = flow.fetch_token(code=code)
