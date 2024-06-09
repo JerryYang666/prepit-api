@@ -21,7 +21,7 @@ load_dotenv()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_SIGNIN_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_SIGNIN_CLIENT_SECRET")
 GOOGLE_PROJECT_ID = os.getenv("GOOGLE_SIGNIN_PROJECT_ID")
-GOOGLE_REDIRECT_URI = "http://localhost:8000/v1/prod/admin/google_signin_callback"
+GOOGLE_REDIRECT_URI = "https://api.prepit-ai.com/v1/dev/admin/google_signin_callback"  # TODO: change to prod
 redis_client = redis.Redis(host=os.getenv("REDIS_ADDRESS"), port=6379, protocol=3, decode_responses=True)
 
 
