@@ -190,7 +190,7 @@ async def get_google_signin_url(came_from: str):
 async def google_signin_callback(code: str, state: str):
     """
     ENDPOINT: /admin/google-signin-callback
-    Handles the Google Signin callback.
+    Handles the Google Signin callback
     :param code: The code.
     :param state: The state.
     :return:
