@@ -115,7 +115,7 @@ class UserAuth:
                 try:
                     token = jwt_generator(user_id, first_name, last_name, email, system_admin, workspace_role, student_id,
                                           profile_img_url)
-                    refresh_token_obj.issued_token_count += 1
+                    refresh_token_obj.issued_access_token_count += 1
                     refresh_token_obj.last_access_token_issued_at = datetime.now()
                     self.db.commit()
                     return token
