@@ -187,7 +187,7 @@ async def get_google_signin_url(came_from: str):
 
 @app.get(f"{URL_PATHS['current_dev_admin']}/google_signin_callback")
 @app.get(f"{URL_PATHS['current_prod_admin']}/google_signin_callback")
-async def google_signin_callback(code: str, state: str, error: str = None):
+async def google_signin_callback(state: str, code: str = None, error: str = None):
     """
     ENDPOINT: /admin/google-signin-callback
     Handles the Google Signin callback
