@@ -31,8 +31,10 @@ from user.SttApiKey import SttApiKey, SttApiKeyResponse
 from admin.AgentManager import router as AgentRouter
 from admin.GoogleSignIn import get_signin_url, signin_callback
 from admin.CwruSignIn import AuthSSO
+from admin.UserAuth import UserAuth
 from user.GetAgent import router as GetAgentRouter
 from utils.response import response
+from middleware.authorization import AuthorizationMiddleware, extract_token
 
 import logging
 
@@ -80,6 +82,9 @@ app.include_router(AgentRouter, prefix=f"{URL_PATHS['current_prod_admin']}/agent
 # so we can seperate the two and maybe add security where users can get the full info given to admin users
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_dev_user']}/agent")
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_prod_user']}/agent")
+
+# system authorization middleware before CORS middleware, so it executes after CORS
+app.add_middleware(AuthorizationMiddleware)
 
 origins = [
     "http://127.0.0.1:8001",
@@ -212,6 +217,25 @@ async def cwru_sso_callback(ticket: str, came_from: str):
     """
     auth = AuthSSO(ticket, came_from)
     return auth.get_user_info()
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/generate_access_token")
+@app.get(f"{URL_PATHS['current_prod_admin']}/generate_access_token")
+def generate_access_token(request: Request):
+    """
+    ENDPOINT: /generate_access_token
+    Generates an access token from the refresh token.
+    :return:
+    """
+    tokens = extract_token(request.headers.get('Authorization', ''))
+    if tokens['refresh_token'] is None:
+        return response(success=False, message="No refresh token provided", status_code=401)
+    auth = UserAuth()
+    access_token = auth.gen_access_token(tokens['refresh_token'])
+    if access_token:
+        return response(success=True, data={"access_token": access_token})
+    else:
+        return response(success=False, message="Failed to generate access token", status_code=401)
 
 
 @app.post(f"{URL_PATHS['current_dev_admin']}/upload_file")
