@@ -103,7 +103,8 @@ class AuthorizationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = extract_actual_path(request.url.path)
         print('path', path)
-        if path in whitelist:
+        # TODO: temp hard code for /agent/get/xxx
+        if path in whitelist or path.startswith('/agent/get/'):
             return await call_next(request)
 
         tokens = extract_token(request.headers.get('Authorization', ''))
