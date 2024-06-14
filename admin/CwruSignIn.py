@@ -26,7 +26,7 @@ class AuthSSO:
         url = "https://login.case.edu/cas/serviceValidate"
         params = {
             "ticket": self.ticket,
-            "service": f"https://api.prepit-ai.com/v1/dev/admin/cwru_sso_callback?came_from={self.came_from}",  # TODO: change to prod
+            "service": f"https://api.prepit-ai.com/v1/prod/admin/cwru_sso_callback?came_from={self.came_from}",
         }
         response = requests.get(url, params=params)
         root = ET.fromstring(response.text)
