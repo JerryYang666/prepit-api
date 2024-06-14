@@ -29,8 +29,12 @@ from user.ChatStream import ChatStream, ChatStreamModel, ChatSingleCallResponse
 from user.TtsStream import TtsStream
 from user.SttApiKey import SttApiKey, SttApiKeyResponse
 from admin.AgentManager import router as AgentRouter
+from admin.GoogleSignIn import get_signin_url, signin_callback
+from admin.CwruSignIn import AuthSSO
+from admin.UserAuth import UserAuth
 from user.GetAgent import router as GetAgentRouter
 from utils.response import response
+from middleware.authorization import AuthorizationMiddleware, extract_token
 
 import logging
 
@@ -79,6 +83,9 @@ app.include_router(AgentRouter, prefix=f"{URL_PATHS['current_prod_admin']}/agent
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_dev_user']}/agent")
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_prod_user']}/agent")
 
+# system authorization middleware before CORS middleware, so it executes after CORS
+app.add_middleware(AuthorizationMiddleware)
+
 origins = [
     "http://127.0.0.1:8001",
     "http://localhost:3000",
@@ -91,6 +98,7 @@ origins = [
     "https://app.prepit.ai",
     "https://test-app.prepit.ai",
     "https://prepit.ai",
+    "https://vercel-preview-dashboard.prepit.ai",
 ]
 
 regex_origins = "https://.*jerryyang666s-projects\.vercel\.app"
@@ -156,7 +164,7 @@ async def get_tts_file(tts_session_id: str, chunk_id: str, background_tasks: Bac
 def get_temp_stt_auth_code(dynamic_auth_code: str):
     """
     ENDPOINT: /user/get_temp_stt_auth_code
-    Generates a temporary STT auth code for the user.
+    Generates a temporary STT auth code for the user
     :return:
     """
     auth = DynamicAuth()
@@ -167,9 +175,72 @@ def get_temp_stt_auth_code(dynamic_auth_code: str):
     return SttApiKeyResponse(status="success", error_message=None, key=api_key)
 
 
+@app.get(f"{URL_PATHS['current_dev_admin']}/get_google_signin_url")
+@app.get(f"{URL_PATHS['current_prod_admin']}/get_google_signin_url")
+async def get_google_signin_url(came_from: str):
+    """
+    ENDPOINT: /admin/get_google_signin_url
+    Gets the Google Signin URL.
+    :param came_from: the current URL that the user is on.
+    :return:
+    """
+    try:
+        url = get_signin_url(came_from)
+        return response(True, data={"url": url})
+    except Exception as e:
+        return response(False, message="Failed to get Google Signin URL")
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/google_signin_callback")
+@app.get(f"{URL_PATHS['current_prod_admin']}/google_signin_callback")
+async def google_signin_callback(state: str, code: str = None, error: str = None):
+    """
+    ENDPOINT: /admin/google-signin-callback
+    Handles the Google Signin callback
+    :param code: The code.
+    :param state: The state.
+    :param error: The error. error=access_denied when user denies access
+    :return:
+    """
+    return signin_callback(code, state, error)
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/cwru_sso_callback")
+@app.get(f"{URL_PATHS['current_prod_admin']}/cwru_sso_callback")
+async def cwru_sso_callback(ticket: str, came_from: str):
+    """
+    ENDPOINT: /v1/prod/user/sso
+    Handles the CWRU SSO callback.
+    :param ticket: The ticket.
+    :param came_from: The came_from.
+    :return:
+    """
+    auth = AuthSSO(ticket, came_from)
+    return auth.get_user_info()
+
+
+@app.get(f"{URL_PATHS['current_dev_admin']}/generate_access_token")
+@app.get(f"{URL_PATHS['current_prod_admin']}/generate_access_token")
+def generate_access_token(request: Request):
+    """
+    ENDPOINT: /generate_access_token
+    Generates an access token from the refresh token.
+    :return:
+    """
+    tokens = extract_token(request.headers.get('Authorization', ''))
+    if tokens['refresh_token'] is None:
+        return response(success=False, message="No refresh token provided", status_code=401)
+    auth = UserAuth()
+    access_token = auth.gen_access_token(tokens['refresh_token'])
+    if access_token:
+        return response(success=True, data={"access_token": access_token})
+    else:
+        return response(success=False, message="Failed to generate access token", status_code=401)
+
+
 @app.post(f"{URL_PATHS['current_dev_admin']}/upload_file")
 @app.post(f"{URL_PATHS['current_prod_admin']}/upload_file")
-def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile):
     """
     ENDPOINT: /admin/upload_file
     Uploads a file to the server.
