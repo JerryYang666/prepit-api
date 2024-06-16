@@ -21,7 +21,11 @@ load_dotenv()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_SIGNIN_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_SIGNIN_CLIENT_SECRET")
 GOOGLE_PROJECT_ID = os.getenv("GOOGLE_SIGNIN_PROJECT_ID")
-GOOGLE_REDIRECT_URI = "https://api.prepit-ai.com/v1/prod/admin/google_signin_callback"
+CURRENT_ENV = os.getenv("REDIS_ADDRESS")
+if CURRENT_ENV == "redis-dev-server":
+    GOOGLE_REDIRECT_URI = "https://api.prepit-ai.com/v1/dev/admin/google_signin_callback"
+else:
+    GOOGLE_REDIRECT_URI = "https://api.prepit-ai.com/v1/prod/admin/google_signin_callback"
 redis_client = redis.Redis(host=os.getenv("REDIS_ADDRESS"), port=6379, protocol=3, decode_responses=True)
 
 
@@ -90,7 +94,8 @@ def signin_callback(code, state, error):
             'email': id_token_info['email'],
             'first_name': id_token_info['given_name'],
             'last_name': id_token_info['family_name'],
-            'profile_img_url': id_token_info['picture']
+            'profile_img_url': id_token_info['picture'] if 'picture' in id_token_info
+            else f"https://source.boringavatars.com/beam/120/{id_token_info['given_name']}{id_token_info['family_name']}?colors=ADEADA,BDEADB,CDEADC,DDEADD,B9E1F0"
         }
         user_id = user_auth.user_login('google', processed_user_info, id_token_info)
         if user_id:
