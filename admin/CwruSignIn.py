@@ -10,9 +10,12 @@ import requests
 import xml.etree.ElementTree as ET
 from fastapi.responses import RedirectResponse
 from admin.UserAuth import UserAuth
+import os
 
 
 class AuthSSO:
+    CURRENT_ENV = os.getenv("REDIS_ADDRESS")
+
     def __init__(self, ticket, came_from):
         self.student_id = None
         self.ticket = ticket
@@ -24,10 +27,16 @@ class AuthSSO:
         :return: user login token
         """
         url = "https://login.case.edu/cas/serviceValidate"
-        params = {
-            "ticket": self.ticket,
-            "service": f"https://api.prepit-ai.com/v1/prod/admin/cwru_sso_callback?came_from={self.came_from}",
-        }
+        if self.CURRENT_ENV == "redis-dev-server":
+            params = {
+                "ticket": self.ticket,
+                "service": f"https://api.prepit-ai.com/v1/dev/admin/cwru_sso_callback?came_from={self.came_from}",
+            }
+        else:
+            params = {
+                "ticket": self.ticket,
+                "service": f"https://api.prepit-ai.com/v1/prod/admin/cwru_sso_callback?came_from={self.came_from}",
+            }
         response = requests.get(url, params=params)
         root = ET.fromstring(response.text)
         # get child node
