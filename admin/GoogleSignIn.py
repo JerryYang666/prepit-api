@@ -94,7 +94,8 @@ def signin_callback(code, state, error):
             'email': id_token_info['email'],
             'first_name': id_token_info['given_name'],
             'last_name': id_token_info['family_name'],
-            'profile_img_url': id_token_info['picture']
+            'profile_img_url': id_token_info['picture'] if 'picture' in id_token_info
+            else f"https://source.boringavatars.com/beam/120/{id_token_info['given_name']}{id_token_info['family_name']}?colors=ADEADA,BDEADB,CDEADC,DDEADD,B9E1F0"
         }
         user_id = user_auth.user_login('google', processed_user_info, id_token_info)
         if user_id:
