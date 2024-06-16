@@ -113,6 +113,7 @@ class AuthorizationMiddleware(BaseHTTPMiddleware):
             if parse_result['success']:
                 user_access = extract_role(parse_result['data'])
                 if has_access(endpoint_access_map, user_access, path):
+                    request.state.user_jwt_content = parse_result['data']
                     return await call_next(request)
             else:
                 return JSONResponse(content={"success": False, "message": parse_result['message'],

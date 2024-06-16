@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -13,6 +13,7 @@ from migrations.models import Agent
 
 from utils.response import response
 from common.AgentPromptHandler import AgentPromptHandler
+from admin.WorkspaceManager import check_workspace_agent_manage_access
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ class AgentCreate(BaseModel):
     voice: bool = Field(default=True)
     system_prompt: dict
     files: dict = Field(default={})
+    workspace_id: str
 
 
 class AgentDelete(BaseModel):
@@ -51,6 +53,7 @@ class AgentUpdate(BaseModel):
     model: Optional[str] = None
     system_prompt: Optional[dict] = None
     files: Optional[dict] = None
+    workspace_id: str
 
 
 class AgentResponse(BaseModel):
@@ -66,16 +69,22 @@ class AgentResponse(BaseModel):
     model: Optional[str] = None
     system_prompt: dict
     files: dict
+    workspace_id: str
 
 
 @router.post("/add_agent")
 def create_agent(
         agent_data: AgentCreate,
-        db: Session = Depends(get_db)
+        request: Request,
+        db: Session = Depends(get_db),
 ):
     """
     Create a new agent record in the database.
     """
+    # check if the user has access to manage agents in the workspace
+    user_jwt = request.state.user_jwt_content
+    if not check_workspace_agent_manage_access(user_jwt, agent_data.workspace_id):
+        return response(False, message="You do not have access to manage agents in this workspace")
     new_agent = Agent(
         agent_id=uuid4(),
         agent_name=agent_data.agent_name,
@@ -90,7 +99,8 @@ def create_agent(
         created_at=datetime.now(),
         updated_at=datetime.now(),
         agent_total_steps=len(agent_data.system_prompt),
-        files=agent_data.files
+        files=agent_data.files,
+        workspace_id=agent_data.workspace_id
     )
     db.add(new_agent)
 
@@ -119,6 +129,7 @@ def create_agent(
 @router.post("/delete_agent")
 def delete_agent(
         delete_data: AgentDelete,
+        request: Request,
         db: Session = Depends(get_db)
 ):
     """
@@ -126,6 +137,12 @@ def delete_agent(
     Will not actually delete the record or prompt from the database.
     """
     agent_to_delete = db.query(Agent).filter(Agent.agent_id == delete_data.agent_id).first()
+
+    # check if the user has access to manage agents in the workspace
+    user_jwt = request.state.user_jwt_content
+    if not check_workspace_agent_manage_access(user_jwt, agent_to_delete.workspace_id):
+        return response(False, message="You do not have access to manage agents in this workspace")
+
     if not agent_to_delete:
         logger.error(f"Agent not found: {delete_data.agent_id}")
         response(False, status_code=404, message="Agent not found")
@@ -144,12 +161,19 @@ def delete_agent(
 @router.post("/update_agent")
 def edit_agent(
         update_data: AgentUpdate,
+        request: Request,
         db: Session = Depends(get_db)
 ):
     """
     Update an existing agent record in the database.
     """
     agent_to_update = db.query(Agent).filter(Agent.agent_id == update_data.agent_id).first()
+
+    # check if the user has access to manage agents in the workspace
+    user_jwt = request.state.user_jwt_content
+    if not check_workspace_agent_manage_access(user_jwt, agent_to_update.workspace_id):
+        return response(False, message="You do not have access to manage agents in this workspace")
+
     if not agent_to_update:
         logger.error(f"Agent not found: {update_data.agent_id}")
         response(False, status_code=404, message="Agent not found")
@@ -173,6 +197,8 @@ def edit_agent(
         agent_to_update.model = update_data.model
     if update_data.files is not None:
         agent_to_update.files = update_data.files
+    if update_data.workspace_id is not None:
+        agent_to_update.workspace_id = update_data.workspace_id
     agent_to_update.updated_at = datetime.now()
     agent_to_update.agent_total_steps = len(update_data.system_prompt)
 
@@ -201,7 +227,9 @@ def edit_agent(
 
 @router.get("/agents")
 def list_agents(
+        request: Request,
         search: Optional[str] = None,
+        workspace_id: Optional[str] = None,
         db: Session = Depends(get_db),
         page: int = 1,
         page_size: int = 10
@@ -209,32 +237,67 @@ def list_agents(
     """
     List agents with pagination.
     """
-    fields = (Agent.agent_name, Agent.agent_cover, Agent.agent_description, Agent.agent_id, Agent.updated_at)
-    # search by name or description
-    if search is None or search == "":
-        query = db.query(Agent).with_entities(*fields).filter(Agent.status != 2)
-    else:
-        query = (db.query(Agent).with_entities(*fields).filter(Agent.status != 2)
+    # Define the fields to be returned
+    fields = (Agent.agent_name, Agent.agent_cover, Agent.agent_description, Agent.agent_id, Agent.updated_at, Agent.workspace_id)
+    # Get the workspaces that the user has access to
+    allowed_workspaces = list(request.state.user_jwt_content['workspace_role'].keys())
+
+    if (search is None or search == "") and (workspace_id is None or workspace_id == ""):
+        # no filter applied, get all agents that the user have access to
+        query = db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id.in_(allowed_workspaces))
+
+    elif (search is None or search == "") and (workspace_id is not None and workspace_id != ""):
+        # no search, but filter by workspace_id
+
+        if workspace_id not in allowed_workspaces:
+            # make sure the user has access to the workspace requested
+            return response(False, message="You do not have access to this workspace")
+
+        query = db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id == workspace_id)
+
+    elif (search is not None and search != "") and (workspace_id is None or workspace_id == ""):
+        # search by name or description, but no filter by workspace_id
+        query = (db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id.in_(allowed_workspaces))
                  .filter((Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%"))))
+
+    elif (search is not None and search != "") and (workspace_id is not None and workspace_id != ""):
+        # search by name or description, and filter by workspace_id
+
+        if workspace_id not in allowed_workspaces:
+            # make sure the user has access to the workspace requested
+            return response(False, message="You do not have access to this workspace")
+
+        query = (db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id == workspace_id)
+                 .filter((Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%"))))
+
+    else:
+        return response(False, message="Invalid search parameters")
     total = query.count()
     query = query.order_by(Agent.updated_at.desc())
     skip = (page - 1) * page_size
     agents = query.offset(skip).limit(page_size).all()
     # Convert each tuple into a dictionary
     agents = [dict(agent_name=agent[0], agent_cover=agent[1], agent_description=agent[2], agent_id=agent[3],
-                   updated_at=agent[4]) for agent in agents]
+                   updated_at=agent[4], workspace_id=agent[5]) for agent in agents]
     return response(True, data={"agents": agents, "total": total})
 
 
 @router.get("/agent/{agent_id}")
 def get_agent_by_id(
         agent_id: UUID,
+        request: Request,
         db: Session = Depends(get_db)
 ):
     """
     Fetch an agent by its UUID.
     """
     agent = db.query(Agent).filter(Agent.agent_id == agent_id, Agent.status != 2).first()  # exclude deleted agents
+
+    # check if the user has access to manage agents in the workspace
+    user_jwt = request.state.user_jwt_content
+    if not check_workspace_agent_manage_access(user_jwt, agent.workspace_id):
+        return response(False, message="You do not have access to manage agents in this workspace")
+
     if agent is None:
         response(False, status_code=404, message="Agent not found")
     # get the prompt for the agent
