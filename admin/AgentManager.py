@@ -84,7 +84,7 @@ def create_agent(
     # check if the user has access to manage agents in the workspace
     user_jwt = request.state.user_jwt_content
     if not check_workspace_agent_manage_access(user_jwt, agent_data.workspace_id):
-        return response(False, message="You do not have access to manage agents in this workspace")
+        return response(False, message="You do not have access to manage cases in this casebook")
 
     new_agent = Agent(
         agent_id=uuid4(),
@@ -142,7 +142,7 @@ def delete_agent(
     # check if the user has access to manage agents in the workspace
     user_jwt = request.state.user_jwt_content
     if not check_workspace_agent_manage_access(user_jwt, agent_to_delete.workspace_id):
-        return response(False, message="You do not have access to manage agents in this workspace")
+        return response(False, message="You do not have access to manage cases in this casebook")
 
     if not agent_to_delete:
         logger.error(f"Agent not found: {delete_data.agent_id}")
@@ -175,9 +175,9 @@ def edit_agent(
     user_jwt = request.state.user_jwt_content
     if agent_to_update.workspace_id != update_data.workspace_id:
         if not check_workspace_agent_manage_access(user_jwt, update_data.workspace_id):
-            return response(False, message="You do not have access to manage agents in the workspace you are moving the agent to")
+            return response(False, message="You do not have access to manage cases in the casebook you are moving the case to")
     if not check_workspace_agent_manage_access(user_jwt, agent_to_update.workspace_id):
-        return response(False, message="You do not have access to manage agents in this workspace")
+        return response(False, message="You do not have access to manage cases in this casebook")
 
     if not agent_to_update:
         logger.error(f"Agent not found: {update_data.agent_id}")
@@ -256,7 +256,7 @@ def list_agents(
 
         if workspace_id not in allowed_workspaces:
             # make sure the user has access to the workspace requested
-            return response(False, message="You do not have access to this workspace")
+            return response(False, message="You do not have access to this casebook")
 
         query = db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id == workspace_id)
 
@@ -270,7 +270,7 @@ def list_agents(
 
         if workspace_id not in allowed_workspaces:
             # make sure the user has access to the workspace requested
-            return response(False, message="You do not have access to this workspace")
+            return response(False, message="You do not have access to this casebook")
 
         query = (db.query(Agent).with_entities(*fields).filter(Agent.status != 2).filter(Agent.workspace_id == workspace_id)
                  .filter((Agent.agent_name.ilike(f"%{search}%")) | (Agent.agent_description.ilike(f"%{search}%"))))
@@ -301,7 +301,7 @@ def get_agent_by_id(
     # check if the user has access to manage agents in the workspace
     user_jwt = request.state.user_jwt_content
     if not check_workspace_agent_manage_access(user_jwt, agent.workspace_id):
-        return response(False, message="You do not have access to manage agents in this workspace")
+        return response(False, message="You do not have access to manage cases in this casebook")
 
     if agent is None:
         response(False, status_code=404, message="Agent not found")
