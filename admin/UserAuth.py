@@ -42,7 +42,7 @@ class UserAuth:
                     last_name=user_info['last_name'],
                     email=user_info['email'],
                     system_admin=False,
-                    workspace_role={'common': 'student'},
+                    workspace_role={'prepit': 'student'},
                     school_id=0,
                     student_id=user_info.get('student_id', ''),
                     last_auth_metadata=signin_metadata,
