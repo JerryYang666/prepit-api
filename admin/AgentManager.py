@@ -85,6 +85,7 @@ def create_agent(
     user_jwt = request.state.user_jwt_content
     if not check_workspace_agent_manage_access(user_jwt, agent_data.workspace_id):
         return response(False, message="You do not have access to manage agents in this workspace")
+
     new_agent = Agent(
         agent_id=uuid4(),
         agent_name=agent_data.agent_name,
@@ -169,8 +170,12 @@ def edit_agent(
     """
     agent_to_update = db.query(Agent).filter(Agent.agent_id == update_data.agent_id).first()
 
-    # check if the user has access to manage agents in the workspace
+    # check if the user has access to manage agents in the workspace that the agent from,
+    # and the workspace that the agent is being moved to, if these are different
     user_jwt = request.state.user_jwt_content
+    if agent_to_update.workspace_id != update_data.workspace_id:
+        if not check_workspace_agent_manage_access(user_jwt, update_data.workspace_id):
+            return response(False, message="You do not have access to manage agents in the workspace you are moving the agent to")
     if not check_workspace_agent_manage_access(user_jwt, agent_to_update.workspace_id):
         return response(False, message="You do not have access to manage agents in this workspace")
 
