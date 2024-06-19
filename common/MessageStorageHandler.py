@@ -32,6 +32,8 @@ class Message(BaseModel):
     user_id: str  # The ID of the user who the message belongs to, case ID
     role: str  # The role of message sender, openai or anthropic or human
     content: str  # The content of the message
+    section_id: str  # The ID of the section, int
+    trial_id: str  # The ID of the trial, int
 
 
 class MessageStorageHandler:
@@ -62,7 +64,9 @@ class MessageStorageHandler:
                     'msg_id': msg_id,
                     'user_id': user_id,
                     'role': role,
-                    'content': content
+                    'content': content,
+                    'section_id': '1',
+                    'trial_id': '1'
                 }
             )
             return created_at

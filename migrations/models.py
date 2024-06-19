@@ -79,3 +79,21 @@ class RefreshToken(Base):
 
     def __repr__(self):
         return f"RefreshToken id: {self.token_id}, user_id: {self.user_id}, token: {self.token}"
+
+
+class Thread(Base):
+    __tablename__ = "ai_threads"
+
+    thread_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
+    user_id = Column(String(15))
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    agent_id = Column(UUID(as_uuid=True), ForeignKey('ai_agents.agent_id'), nullable=False)
+    edge_ap = Column(String(20))
+    last_trial_timestamp = Column(DateTime)
+    last_trial_id = Column(Integer, default=0, nullable=False)
+    finished = Column(Boolean, default=False, nullable=False)
+    agent_name = Column(String(255))
+    workspace_id = Column(String(64))
+
+    def __repr__(self):
+        return f"Thread id: {self.thread_id}, user_id: {self.user_id}, agent_id: {self.agent_id}, trial_id: {self.last_trial_id}, finished: {self.finished}"
