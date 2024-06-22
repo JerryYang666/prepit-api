@@ -144,5 +144,6 @@ def get_thread_list(
                 "agent_name": str(t.agent_name),
                 "workspace_id": str(t.workspace_id),
                 "last_trial_timestamp": str(t.last_trial_timestamp),
+                "status": "Finished" if t.finished else "In Progress"
                 } for t in threads]
     return response(True, data={"threads": results, "total": total})
