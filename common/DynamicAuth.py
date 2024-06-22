@@ -5,7 +5,7 @@ import time
 class DynamicAuth:
     def __init__(self):
         self.step = 30  # seconds window
-        self.salt = "xlab_jerry_salt"
+        self.salt = "prepit_jerry_salt"
 
     def verify_auth_code(self, received_code):
         current_time_step = int(time.time()) // self.step

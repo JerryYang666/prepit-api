@@ -22,6 +22,8 @@ from sqlalchemy.orm import Session
 
 from migrations.models import Thread, Agent
 
+from common.DynamicAuth import DynamicAuth
+
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -147,3 +149,30 @@ def get_thread_list(
                 "status": "Finished" if t.finished else "In Progress"
                 } for t in threads]
     return response(True, data={"threads": results, "total": total})
+
+
+class ValidateThreadID(BaseModel):
+    thread_id: str
+    dynamic_auth_code: str
+
+
+@router.post("/validate_id")
+def validate_thread_id(validate: ValidateThreadID, db: Session = Depends(get_db)):
+    """
+    Validate the thread ID by looking up the thread in the SQL database.
+    """
+    dynamic_auth = DynamicAuth()
+    if not dynamic_auth.verify_auth_code(validate.dynamic_auth_code):
+        return response(False, status_code=401, message="Invalid auth code")
+    try:
+        thread = db.query(Thread).filter(Thread.thread_id == validate.thread_id).first()
+        if thread is None:
+            return response(False, status_code=404, message="Thread not found")
+        elif thread.finished:
+            return response(False, status_code=400, message="Thread is already finished")
+        thread.last_trial_timestamp = datetime.now()
+        db.commit()
+        return response(True, data={"thread_id": str(thread.thread_id)})
+    except Exception as e:
+        logger.error(f"Error validating thread ID: {e}")
+        return response(False, status_code=500, message="Please try again later")
