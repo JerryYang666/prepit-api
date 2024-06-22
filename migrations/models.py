@@ -85,7 +85,7 @@ class Thread(Base):
     __tablename__ = "ai_threads"
 
     thread_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
-    user_id = Column(String(15))
+    user_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     agent_id = Column(UUID(as_uuid=True), ForeignKey('ai_agents.agent_id'), nullable=False)
     edge_ap = Column(String(20))
