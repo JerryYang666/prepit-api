@@ -104,6 +104,7 @@ origins = [
     "https://test-app.prepit.ai",
     "https://prepit.ai",
     "https://vercel-preview-dashboard.prepit.ai",
+    "https://interview.prepit.ai",
 ]
 
 regex_origins = "https://.*jerryyang666s-projects\.vercel\.app"
