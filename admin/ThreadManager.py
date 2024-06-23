@@ -172,7 +172,7 @@ def validate_thread_id(validate: ValidateThreadID, db: Session = Depends(get_db)
             return response(False, status_code=400, message="Thread is already finished")
         thread.last_trial_timestamp = datetime.now()
         db.commit()
-        return response(True, data={"agent_id": str(thread.agent_id)})
+        return response(True, data={"agent_id": str(thread.agent_id), "user_id": thread.user_id})
     except Exception as e:
         logger.error(f"Error validating thread ID: {e}")
         return response(False, status_code=401, message="Please try again later")
