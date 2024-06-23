@@ -29,6 +29,7 @@ from user.ChatStream import ChatStream, ChatStreamModel, ChatSingleCallResponse
 from user.TtsStream import TtsStream
 from user.SttApiKey import SttApiKey, SttApiKeyResponse
 from admin.AgentManager import router as AgentRouter
+from admin.ThreadManager import router as ThreadRouter
 from admin.GoogleSignIn import get_signin_url, signin_callback
 from admin.CwruSignIn import AuthSSO
 from admin.UserAuth import UserAuth
@@ -82,6 +83,10 @@ app.include_router(AgentRouter, prefix=f"{URL_PATHS['current_prod_admin']}/agent
 # so we can seperate the two and maybe add security where users can get the full info given to admin users
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_dev_user']}/agent")
 app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_prod_user']}/agent")
+
+# Register the ThreadRouter for admin endpoints
+app.include_router(ThreadRouter, prefix=f"{URL_PATHS['current_dev_admin']}/threads")
+app.include_router(ThreadRouter, prefix=f"{URL_PATHS['current_prod_admin']}/threads")
 
 # system authorization middleware before CORS middleware, so it executes after CORS
 app.add_middleware(AuthorizationMiddleware)

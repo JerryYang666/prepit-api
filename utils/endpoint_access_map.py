@@ -15,8 +15,9 @@ endpoint_access_map = {
     "/upload_file": {"student": False, "teacher": True, "admin": True},
     # above are all admin endpoints
     "/agent/get/{agent_id}": {"student": True, "teacher": True, "admin": True},  # student get agent by id
+    "/threads/new_thread": {"student": True, "teacher": True, "admin": True},
     "/threads/get_thread/{thread_id}": {"student": False, "teacher": True, "admin": True},
-    "/threads/get_thread_list": {"student": False, "teacher": True, "admin": True},
+    "/threads/get_thread_list": {"student": True, "teacher": True, "admin": True},
     "/stream_chat": {"student": True, "teacher": True, "admin": True},
     "/get_tts_file": {"student": True, "teacher": True, "admin": True},
     "/get_temp_stt_auth_code": {"student": True, "teacher": True, "admin": True},
