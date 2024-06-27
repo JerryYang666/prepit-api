@@ -53,7 +53,7 @@ def jwt_generator(user_id: str, first_name: str, last_name: str, email: str, sys
         "first_name": first_name,
         "last_name": last_name,
         "system_admin": system_admin,
-        "workspace_role": workspace_role,
+        "workspace_role": workspace_role,  # {workspace_id: role}
         "student_id": student_id,
         "profile_img_url": profile_img_url,
         "iat": datetime.now(tz=timezone.utc),

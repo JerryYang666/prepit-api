@@ -34,6 +34,7 @@ class Message(BaseModel):
     content: str  # The content of the message
     step_id: int  # The ID of the section, int
     trial_id: str  # The ID of the trial, int
+    has_audio: bool = False  # Whether the message has audio attached
 
 
 class MessageStorageHandler:
