@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 class Feedback(BaseModel):
     thread_id: str
     step_id: int
+    step_title: str = ""
     agent_id: str
     feedback: str
 
@@ -30,29 +31,6 @@ class FeedbackStorageHandler:
                                        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID_DYNAMODB"),
                                        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY_DYNAMODB"))
         self.table = self.dynamodb.Table(self.DYNAMODB_TABLE_NAME)
-
-    def put_feedback(self, thread_id: str, agent_id: str, step_id: int, feedback: str) -> bool:
-        """
-        Put the feedback into the database.
-        :param thread_id: The ID of the thread.
-        :param agent_id: The ID of the agent.
-        :param step_id: The ID of the step.
-        :param feedback: The feedback.
-        :return: True if successful, False otherwise.
-        """
-        try:
-            self.table.put_item(
-                Item={
-                    'thread_id': thread_id,
-                    'step_id': step_id,
-                    'agent_id': agent_id,
-                    'feedback': feedback
-                }
-            )
-            return True
-        except Exception as e:
-            logging.error(f"Error putting the feedback into the database: {e}")
-            return False
 
     def get_feedback_for_thread(self, thread_id: str) -> list:
         """
