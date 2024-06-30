@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 
 from utils.response import response
 from common.MessageStorageHandler import MessageStorageHandler
+from common.FeedbackStorageHandler import FeedbackStorageHandler
 
 from migrations.session import get_db
 
@@ -29,6 +30,7 @@ router = APIRouter()
 
 # Initialize the MessageStorageHandler
 message_handler = MessageStorageHandler()
+feedback_handler = FeedbackStorageHandler()
 
 
 class ThreadListQuery(BaseModel):
@@ -88,13 +90,17 @@ def get_thread_by_id(thread_id: UUID):
     """
     try:
         thread_messages = message_handler.get_thread(str(thread_id))
+        thread_feedback = feedback_handler.get_feedback_for_thread(str(thread_id))
         if not thread_messages:
             return response(False, status_code=404, message="Interview not found")
 
-        # Sort the messages by 'created_at' time in descending order
+        # Sort the messages by 'created_at' time in ascending order
         sorted_messages = sorted(thread_messages, key=lambda x: x.created_at)
+        # Sort the feedback by 'step_id' in ascending order
+        sorted_feedback = sorted(thread_feedback, key=lambda x: x.step_id)
         return response(True, data={"thread_id": thread_id,
-                                    "messages": sorted_messages})
+                                    "messages": sorted_messages,
+                                    "feedback": sorted_feedback})
     except Exception as e:
         logger.error(f"Error fetching thread content: {e}")
         response(False, status_code=500, message=str(e))
