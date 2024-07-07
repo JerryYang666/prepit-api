@@ -14,7 +14,7 @@ import json
 import logging
 from fastapi import APIRouter, Depends
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Asm, GroupId, ReplyTo
+from sendgrid.helpers.mail import Mail, Asm, GroupId, ReplyTo, From
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -86,7 +86,7 @@ async def get_email_otp(email_signin_request: GetOtpRequest, db=Depends(get_db))
     try:
         # send the email otp to the user
         message = Mail(
-            from_email='prepit-service@coursey.ai',
+            from_email=From('prepit-service@coursey.ai', 'Prepit Sign In'),
             to_emails=email,
         )
         message.template_id = 'd-aff816bd2bb340b0b142c748730b8ac7'
