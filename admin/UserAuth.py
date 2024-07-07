@@ -32,9 +32,11 @@ class UserAuth:
         try:
             user = self.db.query(User).filter(
                 User.email == user_info['email']).first()
+            signin_metadata['signin_source'] = signin_source
             if user:
                 # if user already exists, update last login time
                 user.last_login = datetime.now()
+                user.last_auth_metadata = signin_metadata
             else:
                 # if user does not exist, create a new user
                 user = User(

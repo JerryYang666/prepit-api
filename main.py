@@ -34,6 +34,7 @@ from admin.GoogleSignIn import get_signin_url, signin_callback
 from admin.CwruSignIn import AuthSSO
 from admin.UserAuth import UserAuth
 from user.GetAgent import router as GetAgentRouter
+from admin.EmailSignIn import router as EmailSignInRouter
 from utils.response import response
 from middleware.authorization import AuthorizationMiddleware, extract_token
 
@@ -87,6 +88,10 @@ app.include_router(GetAgentRouter, prefix=f"{URL_PATHS['current_prod_user']}/age
 # Register the ThreadRouter for admin endpoints
 app.include_router(ThreadRouter, prefix=f"{URL_PATHS['current_dev_admin']}/threads")
 app.include_router(ThreadRouter, prefix=f"{URL_PATHS['current_prod_admin']}/threads")
+
+# Register the EmailSignInRouter for user endpoints
+app.include_router(EmailSignInRouter, prefix=f"{URL_PATHS['current_dev_admin']}/email")
+app.include_router(EmailSignInRouter, prefix=f"{URL_PATHS['current_prod_admin']}/email")
 
 # system authorization middleware before CORS middleware, so it executes after CORS
 app.add_middleware(AuthorizationMiddleware)
