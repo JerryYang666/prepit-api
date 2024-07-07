@@ -14,7 +14,7 @@ import json
 import logging
 from fastapi import APIRouter, Depends
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Asm, GroupId
+from sendgrid.helpers.mail import Mail, Asm, GroupId, ReplyTo
 from dotenv import load_dotenv
 from pydantic import BaseModel
 
@@ -96,6 +96,7 @@ async def get_email_otp(email_signin_request: GetOtpRequest, db=Depends(get_db))
             'event_id': event_id
         }
         message.asm = Asm(GroupId(28734))
+        message.reply_to = ReplyTo('service@coursey.ai', 'Prepit Customer Service')
         # send the email
         email_send_status = sg_client.send(message)
         if email_send_status.status_code != 202:
