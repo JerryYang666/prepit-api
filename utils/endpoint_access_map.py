@@ -23,4 +23,6 @@ endpoint_access_map = {
     "/get_temp_stt_auth_code": {"student": True, "teacher": True, "admin": True},
     "/access/get_user_list": {"student": False, "teacher": True, "admin": True},
     "/access/grant_access": {"student": False, "teacher": True, "admin": True},
+    # ping
+    "/ping": {"student": True, "teacher": True, "admin": True},
 }
