@@ -54,6 +54,8 @@ class ThreadContent(BaseModel):
 def get_new_thread(agent_id: str, request: Request, db: Session = Depends(get_db)):
     user_jwt = request.state.user_jwt_content
     user_id = user_jwt['user_id']
+    student_id = user_jwt['student_id']
+    user_name = user_jwt['first_name'] + " " + user_jwt['last_name']
     user_workspaces = user_jwt['workspace_role']
     try:
         agent_query = db.query(Agent).filter(Agent.agent_id == agent_id).first()
@@ -73,7 +75,9 @@ def get_new_thread(agent_id: str, request: Request, db: Session = Depends(get_db
                         agent_id=agent_id,
                         agent_name=agent_name,
                         workspace_id=workspace_id,
-                        last_trial_timestamp=created_at)
+                        last_trial_timestamp=created_at,
+                        student_id=student_id,
+                        user_name=user_name)
         db.add(thread)
         db.commit()
         return response(True, data={"thread_id": thread_id})
@@ -114,19 +118,31 @@ def get_thread_list(
         page_size: int = 10,
         search: Optional[str] = None,
         workspace_id: Optional[str] = None,
+        admin_mode: Optional[bool] = False,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None
 ):
     """
     List threads with pagination, filtered by agent creator.
    """
-    user_id = request.state.user_jwt_content['user_id']
-    query = db.query(Thread).filter(Thread.user_id == user_id)
+    query = None
+    if admin_mode:
+        if not workspace_id:
+            return response(False, status_code=400, message="Workspace ID is required in admin mode")
+        # check user is teacher of workspace or system admin
+        user_workspaces = request.state.user_jwt_content['workspace_role']
+        if user_workspaces.get(workspace_id, None) != "teacher" and not request.state.user_jwt_content['system_admin']:
+            return response(False, status_code=401, message="You are unauthorized. Attempting to access workspace you are not a teacher of.")
+        query = db.query(Thread).filter(Thread.workspace_id == workspace_id)
+    else:
+        user_id = request.state.user_jwt_content['user_id']
+        query = db.query(Thread).filter(Thread.user_id == user_id)
+        if workspace_id:
+            query = query.filter(Thread.workspace_id == workspace_id)
 
     if search:
-        query = query.filter(Thread.agent_name.ilike(f"%{search}%"))
-    if workspace_id:
-        query = query.filter(Thread.workspace_id == workspace_id)
+        query = query.filter((Thread.agent_name.ilike(f"%{search}%")) | (Thread.student_id.ilike(f"%{search}%")) | (Thread.user_name.ilike(f"%{search}%")))
+
     # if start_date:
     #     try:
     #         start_datetime = datetime.fromisoformat(start_date)
@@ -152,7 +168,9 @@ def get_thread_list(
                 "agent_name": str(t.agent_name),
                 "workspace_id": str(t.workspace_id),
                 "last_trial_timestamp": str(t.last_trial_timestamp),
-                "status": "Finished" if t.finished else "In Progress"
+                "status": "Finished" if t.finished else "In Progress",
+                "student_id": t.student_id,
+                "user_name": t.user_name
                 } for t in threads]
     return response(True, data={"threads": results, "total": total})
 

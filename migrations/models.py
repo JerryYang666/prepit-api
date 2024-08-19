@@ -94,6 +94,8 @@ class Thread(Base):
     finished = Column(Boolean, default=False, nullable=False)
     agent_name = Column(String(255))
     workspace_id = Column(String(64))
+    student_id = Column(String(20))
+    user_name = Column(String(256), nullable=False)
 
     def __repr__(self):
         return f"Thread id: {self.thread_id}, user_id: {self.user_id}, agent_id: {self.agent_id}, trial_id: {self.last_trial_id}, finished: {self.finished}"
