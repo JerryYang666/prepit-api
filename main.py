@@ -263,6 +263,19 @@ async def upload_file(file: UploadFile):
     return response(True, data={"file_url": file_url})
 
 
+@app.get(f"{URL_PATHS['current_dev_admin']}/ping")
+@app.get(f"{URL_PATHS['current_prod_admin']}/ping")
+@app.get(f"{URL_PATHS['current_dev_user']}/ping")
+@app.get(f"{URL_PATHS['current_prod_user']}/ping")
+def ping():
+    """
+    ENDPOINT: /ping
+    Pings the server.
+    :return: The response.
+    """
+    return response(True, data={"message": "pong"})
+
+
 @app.get(f"{URL_PATHS['current_dev_admin']}/")
 @app.get(f"{URL_PATHS['current_prod_admin']}/")
 @app.get(f"{URL_PATHS['current_dev_user']}/")
