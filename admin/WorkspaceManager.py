@@ -41,6 +41,12 @@ class UserRoleUpdate(BaseModel):
     role: str  # student, teacher, pending
 
 
+class DeleteUser(BaseModel):
+    student_id: str
+    workspace_id: str
+    user_id: int = None
+
+
 class AddAuthorizedUsers(BaseModel):
     students: list
     workspace_id: str
@@ -186,28 +192,26 @@ def list_users_in_workspace(request: Request,
 
 
 @router.post("/delete_user")
-def delete_user_from_workspace(request: Request, user_role_update: UserRoleUpdate, db: Session = Depends(get_db)):
-    user_workspace_role = request.state.user_jwt_content['workspace_role'].get(user_role_update.workspace_id, None)
+def delete_user_from_workspace(request: Request, delete_user: DeleteUser, db: Session = Depends(get_db)):
+    user_workspace_role = request.state.user_jwt_content['workspace_role'].get(delete_user.workspace_id, None)
     if user_workspace_role != 'teacher' and not request.state.user_jwt_content['system_admin']:
         return response(False, status_code=403, message="You do not have access to this resource")
     try:
-        user = db.query(User).filter(User.user_id == user_role_update.user_id,
-                                     User.student_id == user_role_update.student_id).first()
-        if not user:
-            return response(False, status_code=404, message="User not found")
 
         user_workspace = db.query(UserWorkspace).filter(
-            UserWorkspace.user_id == user.user_id,
-            UserWorkspace.student_id == user_role_update.student_id,
-            UserWorkspace.workspace_id == user_role_update.workspace_id
+            UserWorkspace.student_id == delete_user.student_id,
+            UserWorkspace.workspace_id == delete_user.workspace_id
         ).first()
 
         if not user_workspace:
             return response(False, status_code=404, message="User not in this workspace")
 
+        if user_workspace.role != "pending" and delete_user.user_id:
+            user = db.query(User).filter(User.user_id == user_workspace.user_id).first()
+            del user.workspace_role[delete_user.workspace_id]
+            flag_modified(user, "workspace_role")
+
         db.delete(user_workspace)
-        del user.workspace_role[user_role_update.workspace_id]
-        flag_modified(user, "workspace_role")
         db.commit()
 
         return response(True, message="User deleted from workspace successfully")
