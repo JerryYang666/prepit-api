@@ -1,7 +1,7 @@
 # Copyright (c) 2024.
 # -*-coding:utf-8 -*-
 """
-@file: WorkspaceManager.py
+@file: WorkspaceHelper.py
 @author: Jerry(Ruihuang)Yang
 @email: rxy216@case.edu
 @time: 6/16/24 00:16
