@@ -41,6 +41,11 @@ class UserRoleUpdate(BaseModel):
     role: str  # student, teacher, pending
 
 
+class AddAuthorizedUsers(BaseModel):
+    students: list
+    workspace_id: str
+
+
 @router.post("/create")
 def create_workspace(request: Request, workspace: WorkspaceCreate, db: Session = Depends(get_db)):
     if not request.state.user_jwt_content['system_admin']:
@@ -65,14 +70,15 @@ def create_workspace(request: Request, workspace: WorkspaceCreate, db: Session =
 
 
 @router.post("/add_authorized_users")
-def add_authorized_users(students: list, workspace_id: str, request: Request, db: Session = Depends(get_db)):
+def add_authorized_users(add_user: AddAuthorizedUsers, request: Request, db: Session = Depends(get_db)):
     """
     Add authorized users to a workspace, users still need to join the workspace
-    :param students: list of student ids
-    :param workspace_id: workspace id
+    :param add_user: AddAuthorizedUsers
     :param request: Request
     :param db: database session
     """
+    students = add_user.students
+    workspace_id = add_user.workspace_id
     user_workspace_role = request.state.user_jwt_content['workspace_role'].get(workspace_id, None)
     if user_workspace_role != 'teacher' and not request.state.user_jwt_content['system_admin']:
         return response(False, status_code=403, message="You do not have access to this resource")
