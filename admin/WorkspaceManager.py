@@ -172,7 +172,7 @@ def list_users_in_workspace(request: Request,
     try:
         query = db.query(UserWorkspace).filter(UserWorkspace.workspace_id == workspace_id)
         if search:
-            query = query.filter(UserWorkspace.student_id.contains(search))
+            query = query.filter((UserWorkspace.student_id.contains(search)) | (UserWorkspace.user_name.contains(search)))
         total_users = query.count()
         user_workspaces = query.offset((page - 1) * page_size).limit(page_size).all()
         user_list = [
