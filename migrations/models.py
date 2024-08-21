@@ -8,7 +8,7 @@
 """
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, DateTime, String, Integer, func, MetaData, Boolean, UUID, JSON, UniqueConstraint, \
-    ForeignKey
+    ForeignKey, PrimaryKeyConstraint
 
 Base = declarative_base(metadata=MetaData(schema="public"))
 metadata = Base.metadata
@@ -99,3 +99,34 @@ class Thread(Base):
 
     def __repr__(self):
         return f"Thread id: {self.thread_id}, user_id: {self.user_id}, agent_id: {self.agent_id}, trial_id: {self.last_trial_id}, finished: {self.finished}"
+
+
+class Workspace(Base):
+    __tablename__ = 'ai_workspaces'
+
+    workspace_id = Column(String(64), primary_key=True, nullable=False)
+    workspace_name = Column(String(64), unique=True, nullable=False)
+    workspace_active = Column(Boolean, default=False, nullable=False)
+    school_id = Column(Integer)
+    workspace_password = Column(String(128))
+
+    def __repr__(self):
+        return f"AIWorkspace id: {self.workspace_id}, name: {self.workspace_name}, active: {self.workspace_active}, school_id: {self.school_id}"
+
+
+class UserWorkspace(Base):
+    __tablename__ = 'ai_user_workspace'
+
+    user_id = Column(Integer)
+    workspace_id = Column(String(16), nullable=False)
+    role = Column(String(16), default="pending", nullable=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime)
+    student_id = Column(String(16), nullable=False)
+
+    __table_args__ = (
+        PrimaryKeyConstraint('workspace_id', 'student_id', name='ai_user_workspace_pk'),
+    )
+
+    def __repr__(self):
+        return f"AIUserWorkspace user_id: {self.user_id}, workspace_id: {self.workspace_id}, role: {self.role}"
