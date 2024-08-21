@@ -167,6 +167,7 @@ def list_users_in_workspace(request: Request,
             {
                 "user_id": user_workspace.user_id,
                 "student_id": user_workspace.student_id,
+                "user_name": user_workspace.user_name,
                 "role": user_workspace.role,
                 "workspace_id": user_workspace.workspace_id
             }
