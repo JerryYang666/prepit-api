@@ -56,15 +56,16 @@ class UserAuth:
                 self.db.add(user)
             self.db.commit()
             user_id = user.user_id
-            # add user to default workspace 'prepit'
-            user_workspace = UserWorkspace(
-                user_id=user_id,
-                student_id=user_info.get('student_id', ''),
-                workspace_id="prepit",
-                role='student',
-            )
-            self.db.add(user_workspace)
-            self.db.commit()
+            # TODO: add user to default workspace 'prepit'
+            # # add user to default workspace 'prepit'
+            # user_workspace = UserWorkspace(
+            #     user_id=user_id,
+            #     student_id=user_info.get('student_id', ''),
+            #     workspace_id="prepit",
+            #     role='student',
+            # )
+            # self.db.add(user_workspace)
+            # self.db.commit()
             return user_id
         except Exception as e:
             logging.error(f"Error during user login: {e}")
