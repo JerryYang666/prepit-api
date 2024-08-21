@@ -123,6 +123,7 @@ class UserWorkspace(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime)
     student_id = Column(String(16), nullable=False)
+    user_name = Column(String(128))
 
     __table_args__ = (
         PrimaryKeyConstraint('workspace_id', 'student_id', name='ai_user_workspace_pk'),

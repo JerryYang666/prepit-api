@@ -126,6 +126,7 @@ def student_join_workspace(request: Request, join_workspace: StudentJoinWorkspac
 
         user_workspace.role = "student"
         user_workspace.user_id = user_id
+        user_workspace.user_name = user.first_name + " " + user.last_name
         user.workspace_role[join_workspace.workspace_id] = "student"
         flag_modified(user, "workspace_role")
         db.commit()
@@ -138,21 +139,40 @@ def student_join_workspace(request: Request, join_workspace: StudentJoinWorkspac
 
 
 @router.get("/list_users")
-def list_users_in_workspace(request: Request, workspace_id: str, db: Session = Depends(get_db)):
+def list_users_in_workspace(request: Request,
+                            workspace_id: str,
+                            page: int,
+                            page_size: int = 30,
+                            search: str = None,
+                            db: Session = Depends(get_db)):
+    """
+    List all users in a workspace with pagination
+    :param request: Request
+    :param workspace_id: workspace id
+    :param page: page number.
+    :param page_size: number of items per page
+    :param search: search query
+    :param db: database session
+    """
     user_workspace_role = request.state.user_jwt_content['workspace_role'].get(workspace_id, None)
     if user_workspace_role != 'teacher' and not request.state.user_jwt_content['system_admin']:
         return response(False, status_code=403, message="You do not have access to this resource")
     try:
-        users = db.query(UserWorkspace).filter(UserWorkspace.workspace_id == workspace_id).all()
+        query = db.query(UserWorkspace).filter(UserWorkspace.workspace_id == workspace_id)
+        if search:
+            query = query.filter(UserWorkspace.student_id.contains(search))
+        total_users = query.count()
+        user_workspaces = query.offset((page - 1) * page_size).limit(page_size).all()
         user_list = [
             {
-                "user_id": user.user_id,
-                "student_id": user.student_id,
-                "role": user.role
+                "user_id": user_workspace.user_id,
+                "student_id": user_workspace.student_id,
+                "role": user_workspace.role,
+                "workspace_id": user_workspace.workspace_id
             }
-            for user in users
+            for user_workspace in user_workspaces
         ]
-        return response(True, data={"user_list": user_list})
+        return response(True, data={"users": user_list, "total": total_users})
     except Exception as e:
         logger.error(f"Error fetching user list: {e}")
         return response(False, status_code=500, message=str(e))
