@@ -25,4 +25,10 @@ endpoint_access_map = {
     "/access/grant_access": {"student": False, "teacher": True, "admin": True},
     # ping
     "/ping": {"student": True, "teacher": True, "admin": True},
+    # workspace
+    "/workspace/create": {"student": False, "teacher": True, "admin": True},
+    "/workspace/add_authorized_users": {"student": False, "teacher": True, "admin": True},
+    "/workspace/join": {"student": True, "teacher": True, "admin": True},
+    "/workspace/list_users": {"student": False, "teacher": True, "admin": True},
+    "/workspace/delete_user": {"student": False, "teacher": True, "admin": True},
 }

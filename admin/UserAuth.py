@@ -8,7 +8,7 @@
 """
 import uuid
 from datetime import datetime, timedelta
-from migrations.models import User, RefreshToken
+from migrations.models import User, RefreshToken, UserWorkspace
 from migrations.session import get_db
 from utils.token_utils import jwt_generator
 import logging
@@ -50,11 +50,23 @@ class UserAuth:
                     last_auth_metadata=signin_metadata,
                     last_login=datetime.now(),
                     create_at=datetime.now(),
-                    profile_img_url=user_info.get('profile_img_url', f"https://source.boringavatars.com/beam/120/{user_info['first_name']}{user_info['last_name']}?colors=ADEADA,BDEADB,CDEADC,DDEADD,B9E1F0")
+                    profile_img_url=user_info.get('profile_img_url',
+                                                  f"https://api.dicebear.com/9.x/notionists-neutral/png?seed={user_info['first_name']}{user_info['last_name']}")
                 )
                 self.db.add(user)
             self.db.commit()
-            return user.user_id
+            user_id = user.user_id
+            # TODO: add user to default workspace 'prepit'
+            # # add user to default workspace 'prepit'
+            # user_workspace = UserWorkspace(
+            #     user_id=user_id,
+            #     student_id=user_info.get('student_id', ''),
+            #     workspace_id="prepit",
+            #     role='student',
+            # )
+            # self.db.add(user_workspace)
+            # self.db.commit()
+            return user_id
         except Exception as e:
             logging.error(f"Error during user login: {e}")
             self.db.rollback()
@@ -115,7 +127,8 @@ class UserAuth:
                 student_id = user.student_id
                 profile_img_url = user.profile_img_url
                 try:
-                    token = jwt_generator(user_id, first_name, last_name, email, system_admin, workspace_role, student_id,
+                    token = jwt_generator(user_id, first_name, last_name, email, system_admin, workspace_role,
+                                          student_id,
                                           profile_img_url)
                     refresh_token_obj.issued_access_token_count += 1
                     refresh_token_obj.last_access_token_issued_at = datetime.now()

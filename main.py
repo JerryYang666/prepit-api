@@ -35,6 +35,7 @@ from admin.CwruSignIn import AuthSSO
 from admin.UserAuth import UserAuth
 from user.GetAgent import router as GetAgentRouter
 from admin.EmailSignIn import router as EmailSignInRouter
+from admin.WorkspaceManager import router as WorkspaceRouter
 from utils.response import response
 from middleware.authorization import AuthorizationMiddleware, extract_token
 
@@ -92,6 +93,10 @@ app.include_router(ThreadRouter, prefix=f"{URL_PATHS['current_prod_admin']}/thre
 # Register the EmailSignInRouter for user endpoints
 app.include_router(EmailSignInRouter, prefix=f"{URL_PATHS['current_dev_admin']}/email")
 app.include_router(EmailSignInRouter, prefix=f"{URL_PATHS['current_prod_admin']}/email")
+
+# Register the WorkspaceRouter for admin endpoints
+app.include_router(WorkspaceRouter, prefix=f"{URL_PATHS['current_dev_admin']}/workspace")
+app.include_router(WorkspaceRouter, prefix=f"{URL_PATHS['current_prod_admin']}/workspace")
 
 # system authorization middleware before CORS middleware, so it executes after CORS
 app.add_middleware(AuthorizationMiddleware)

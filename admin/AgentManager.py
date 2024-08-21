@@ -13,7 +13,7 @@ from migrations.models import Agent
 
 from utils.response import response
 from common.AgentPromptHandler import AgentPromptHandler
-from admin.WorkspaceManager import check_workspace_agent_manage_access
+from admin.WorkspaceHelper import check_workspace_agent_manage_access
 
 logger = logging.getLogger(__name__)
 
