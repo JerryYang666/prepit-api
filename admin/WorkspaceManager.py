@@ -122,7 +122,7 @@ def student_join_workspace(request: Request, join_workspace: StudentJoinWorkspac
 
         workspace = db.query(Workspace).filter(Workspace.workspace_id == join_workspace.workspace_id).first()
 
-        if join_workspace.password != workspace.workspace_password:
+        if not workspace.workspace_password or join_workspace.password != workspace.workspace_password:
             return response(False, status_code=400, message="Failed to join workspace")
 
         user_workspace = db.query(UserWorkspace).filter(
@@ -172,7 +172,8 @@ def list_users_in_workspace(request: Request,
     try:
         query = db.query(UserWorkspace).filter(UserWorkspace.workspace_id == workspace_id)
         if search:
-            query = query.filter((UserWorkspace.student_id.contains(search)) | (UserWorkspace.user_name.contains(search)))
+            query = query.filter(
+                (UserWorkspace.student_id.contains(search)) | (UserWorkspace.user_name.contains(search)))
         total_users = query.count()
         user_workspaces = query.offset((page - 1) * page_size).limit(page_size).all()
         user_list = [
