@@ -132,7 +132,8 @@ def get_thread_list(
         # check user is teacher of workspace or system admin
         user_workspaces = request.state.user_jwt_content['workspace_role']
         if user_workspaces.get(workspace_id, None) != "teacher" and not request.state.user_jwt_content['system_admin']:
-            return response(False, status_code=401, message="You are unauthorized. Attempting to access workspace you are not a teacher of.")
+            return response(False, status_code=401,
+                            message="You are unauthorized. Attempting to access workspace you are not a teacher of.")
         query = db.query(Thread).filter(Thread.workspace_id == workspace_id)
     else:
         user_id = request.state.user_jwt_content['user_id']
@@ -141,7 +142,8 @@ def get_thread_list(
             query = query.filter(Thread.workspace_id == workspace_id)
 
     if search:
-        query = query.filter((Thread.agent_name.ilike(f"%{search}%")) | (Thread.student_id.ilike(f"%{search}%")) | (Thread.user_name.ilike(f"%{search}%")))
+        query = query.filter((Thread.agent_name.ilike(f"%{search}%")) | (Thread.student_id.ilike(f"%{search}%")) | (
+            Thread.user_name.ilike(f"%{search}%")))
 
     # if start_date:
     #     try:
@@ -200,3 +202,29 @@ def validate_thread_id(validate: ValidateThreadID, db: Session = Depends(get_db)
     except Exception as e:
         logger.error(f"Error validating thread ID: {e}")
         return response(False, status_code=401, message="Please try again later")
+
+
+@router.get("/finish_thread")
+def finish_thread(thread_id: str, auth_code: str, db: Session = Depends(get_db)):
+    """
+    Mark the thread as finished.
+    """
+    # check if the thread id is a valid UUID
+    dynamic_auth = DynamicAuth()
+    if not dynamic_auth.verify_auth_code(auth_code):
+        return response(False, status_code=401, message="Invalid auth code")
+    try:
+        UUID(thread_id)
+    except ValueError:
+        return response(False, status_code=400, message="Invalid thread ID")
+    try:
+        thread = db.query(Thread).filter(Thread.thread_id == thread_id).first()
+        if thread is None:
+            return response(False, status_code=404, message="Thread not found")
+        thread.finished = True
+        db.commit()
+        return response(True)
+    except Exception as e:
+        logger.error(f"Error finishing thread: {e}")
+        db.rollback()
+        return response(False, status_code=500, message="Please try again later")
